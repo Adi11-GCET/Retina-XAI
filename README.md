@@ -233,7 +233,7 @@ Some possible future improvements are:
 
 ## Author
 
-**Aditya Gupta**
+**ADITIYA GUPTA**
 
 B.Tech CSE (Data Science) Student
 
