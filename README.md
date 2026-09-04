@@ -1,131 +1,240 @@
-﻿# RETINA-XAI: Explainable AI for Diabetic Retinopathy Screening in Rural India
+# RETINA-XAI – Explainable AI for Diabetic Retinopathy Screening
 
-**RETINA-XAI** is an AI-assisted healthcare prototype designed for rural and underserved clinical environments. It demonstrates an end-to-end clinical triage workflow:
+RETINA-XAI is a prototype web application that explores how AI can assist in the early screening of diabetic retinopathy, especially in rural and underserved areas.
 
-$$\text{Retinal Fundus Image} \longrightarrow \text{Preprocessing} \longrightarrow \text{AI Screening} \longrightarrow \text{5-Class Prediction} \longrightarrow \text{Grad-CAM Visual Explanation} \longrightarrow \text{Human Review} \longrightarrow \text{Doctor Notes} \longrightarrow \text{Audit History \& Dashboard}$$
+The project allows a user to upload a retinal fundus image, analyze it, view the predicted severity level, and see a visual explanation using Grad-CAM. It also includes a simple review system where healthcare workers can add notes and record whether a specialist referral is required.
 
-The system positions AI as a **screening and triage assistant**, never as a replacement for a certified ophthalmologist.
-
----
-
-## 1. Key Features
-
-- **5-Class Diabetic Retinopathy Grading**:
-  - Class 0: No DR
-  - Class 1: Mild DR
-  - Class 2: Moderate DR
-  - Class 3: Severe DR
-  - Class 4: Proliferative DR
-- **Grad-CAM Visual Explainability (XAI)**:
-  - Interactive visualization revealing which retinal vascular lesions and anatomical regions drove model predictions.
-  - Tabbed viewing modes: **Original Retina**, **Attention Heatmap**, and **Blended Overlay**.
-  - Intuitive low-to-high attention colormap legend.
-- **Preloaded Clinical Sample Cases**:
-  - 1-click sample selector with preloaded reference fundus cases across all 5 severity stages for immediate evaluation without needing external images.
-- **Human-in-the-Loop Clinical Review**:
-  - Healthcare worker notes, observations, and structured specialist referral determination (Yes / No).
-- **Audit History & Analytics Dashboard**:
-  - Searchable, filterable audit log of past screenings.
-  - Interactive Chart.js visualizations: Screening Severity Distribution (Doughnut), Recent Confidence Trend (Line), and Cumulative Class Counts (Bar).
-- **Bilingual Interface (English & हिन्दी)**:
-  - Instant dual-language toggle designed for frontline community health workers and rural vision technicians.
-- **Robust Demo Mode & Model Fallback**:
-  - Runs with real TensorFlow/EfficientNetB0 models when available, or activates a high-fidelity OpenCV retinal morphology & attention heatmap engine when running in demonstration environments.
+> **Note:** This is an educational and demonstration project, not a medical diagnostic system.
 
 ---
 
-## 2. Technology Stack
+## Features
 
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+), Bootstrap 5, Bootstrap Icons, Chart.js.
-- **Backend**: Python, Flask web microframework.
-- **Image Processing**: OpenCV (`opencv-python`), Pillow, NumPy, Matplotlib.
-- **Machine Learning**: TensorFlow / Keras, EfficientNetB0 (`224x224x3`), Grad-CAM.
-- **Database**: SQLite3 with auto-initialization and demo records.
+### 🩺 5-Level Diabetic Retinopathy Classification
 
----
+The application uses five severity levels:
 
-## 3. Installation
+* **0 – No Diabetic Retinopathy**
+* **1 – Mild**
+* **2 – Moderate**
+* **3 – Severe**
+* **4 – Proliferative**
 
-1. Clone or open the repository folder:
-   ```bash
-   cd retina-xai
-   ```
+The prediction is displayed along with the probability of each class.
 
-2. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 🔍 Explainable AI with Grad-CAM
 
----
+The project uses Grad-CAM to create a heatmap showing the areas of the retinal image that received more attention from the model.
 
-## 4. Running the Application Locally
+Users can switch between:
 
-1. Start the Flask server:
-   ```bash
-   python app.py
-   ```
+* Original Image
+* Heatmap
+* Grad-CAM Overlay
 
-2. Open your web browser and navigate to:
-   ```
-   http://127.0.0.1:5000
-   ```
+This makes the prediction easier to understand instead of showing only a final class label.
 
-3. To experience the workflow in 2 minutes:
-   - Navigate to **Screening** (`/screening`).
-   - Click one of the preloaded clinical sample cases (e.g., *Moderate DR* or *Mild DR*), or drag-and-drop a custom fundus photograph.
-   - Click **Analyze Retina** to observe the multi-stage progress animation.
-   - Review the 5-class probability breakdown, circular confidence gauge, and triage recommendation.
-   - Click **Overlay**, **Heatmap**, or **Original** tabs under the Grad-CAM explanation.
-   - Enter clinical notes, select referral status, and click **Save Screening Report**.
-   - Check **History** (`/history`) and **Dashboard** (`/dashboard`) to see updated statistics.
-   - Toggle **हिन्दी** in the navbar to test regional language localization.
+### 📷 Sample Retina Images
 
----
+Some sample cases are included in the application so that the complete workflow can be tested without uploading an image every time.
 
-## 5. Model Placement & Production Integration
+### 👨‍⚕️ Human Review
 
-To connect a custom-trained deep learning model:
-1. Save your trained Keras model as `model/dr_model.keras`.
-2. Ensure input dimensions match `(224, 224, 3)` with standard RGB normalization.
-3. Model output should be a 5-unit Softmax dense layer.
-4. Restart `app.py`. The backend will automatically detect the model file and switch from **Demo Mode** to **Live Model Inference**.
+After analysis, the user can:
+
+* Add observations or notes
+* Select whether referral is required
+* Save the screening report
+
+This keeps a human reviewer involved instead of treating the AI prediction as a final diagnosis.
+
+### 📊 History & Dashboard
+
+The application stores previous screening reports in a SQLite database.
+
+The dashboard provides simple visualizations such as:
+
+* Distribution of screening results
+* Confidence trends
+* Number of cases in each severity class
+
+### 🌐 English & Hindi
+
+The interface supports both English and Hindi to make the prototype more suitable for users in different regions of India.
 
 ---
 
-## 6. Reference Datasets
+## Technology Used
 
-The architecture and clinical severity categories align with major international retinal datasets:
-- **APTOS 2019 Blindness Detection**: Clinical fundus images captured across rural and semi-urban clinics in Tamil Nadu, India (Aravind Eye Hospital).
-- **EyePACS**: Large-scale diabetic retinopathy screening dataset with diverse camera hardware.
-- **IDRiD**: Indian Diabetic Retinopathy Image Dataset with pixel-level lesion ground truths.
-- **Messidor / Messidor-2**: Validated European ophthalmology benchmark.
+### Frontend
+
+* HTML
+* CSS
+* JavaScript
+* Bootstrap 5
+* Chart.js
+
+### Backend
+
+* Python
+* Flask
+
+### AI & Image Processing
+
+* TensorFlow / Keras
+* EfficientNetB0
+* Grad-CAM
+* OpenCV
+* Pillow
+* NumPy
+* Matplotlib
+
+### Database
+
+* SQLite
 
 ---
 
-## 7. Explainable AI & Grad-CAM Methodology
+## Project Workflow
 
-Gradient-weighted Class Activation Mapping (Grad-CAM) calculates the gradient of the predicted class score $y^c$ with respect to feature activation maps $A^k$ of the final convolutional layer:
+The basic workflow of the application is:
 
-$$\alpha_k^c = \frac{1}{Z} \sum_i \sum_j \frac{\partial y^c}{\partial A_{i,j}^k}$$
+**Upload Retina Image → Preprocess Image → AI Prediction → Show Severity → Generate Grad-CAM → Human Review → Save Report**
 
-$$L_{\text{Grad-CAM}}^c = \text{ReLU}\left(\sum_k \alpha_k^c A^k\right)$$
-
-This highlights specific intraretinal microaneurysms, hemorrhages, and exudates, fostering clinical transparency and assisting non-specialist clinicians in verifying AI predictions.
+The application is designed so that AI assists the screening process while the final medical decision remains with a qualified healthcare professional.
 
 ---
 
-## 8. Limitations & Medical Disclaimer
+## Running the Project
 
-> **IMPORTANT DISCLAIMER:**
-> This software is a research and educational prototype developed for demonstration and hackathon evaluation. It is **NOT a certified medical diagnostic device** and is not intended to provide definitive medical diagnosis. All screening outputs, confidence scores, and Grad-CAM visualizations must be reviewed by a qualified healthcare professional or ophthalmologist.
+### 1. Clone the repository
+
+```bash
+git clone <your-repository-url>
+cd retina-xai
+```
+
+### 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Run the Flask application
+
+```bash
+python app.py
+```
+
+### 4. Open in browser
+
+```text
+http://127.0.0.1:5000
+```
 
 ---
 
-## 9. Future Development Roadmap
+## Using the Application
 
-- **Phase 1 (Current)**: End-to-end screening MVP, EfficientNetB0 + Grad-CAM, human notes, SQLite audit trail, English/Hindi UI.
-- **Phase 2**: Grad-CAM++, Score-CAM, and SHAP kernel explanations for sub-lesion localization.
-- **Phase 3**: Regional language expansion: Bengali (বাংলা), Tamil (தமிழ்), Telugu (తెలుగు), Marathi (मराठी).
-- **Phase 4**: Quantized ONNX / TFLite edge inference for offline low-cost field devices (e.g. Raspberry Pi 5).
-- **Phase 5**: Integration with India's Ayushman Bharat Digital Mission (ABDM) and rural primary health centre workflows.
-- **Phase 6**: Tele-ophthalmology referral portal connecting district and tertiary eye hospitals.
+1. Open the **Screening** page.
+2. Select one of the available sample cases or upload a retinal fundus image.
+3. Click **Analyze Retina**.
+4. View the predicted diabetic retinopathy severity.
+5. Check the class probabilities and confidence score.
+6. Open the **Original**, **Heatmap**, and **Overlay** views.
+7. Add notes and select the referral status.
+8. Save the screening report.
+9. Visit **History** or **Dashboard** to view previous results.
+
+---
+
+## AI Model
+
+The application is designed to work with an EfficientNetB0-based TensorFlow/Keras model.
+
+The expected input size is:
+
+```text
+224 × 224 × 3
+```
+
+The model is expected to produce five output classes corresponding to the five diabetic retinopathy severity levels.
+
+If a trained model is available, it can be placed at:
+
+```text
+model/dr_model.keras
+```
+
+The application can then use the model for inference.
+
+### Demo Mode
+
+For demonstration purposes, the project can also run without the trained model. In this case, the application uses its demo image-processing logic so that the complete website workflow can still be tested.
+
+---
+
+## Dataset References
+
+The project is based on commonly used diabetic retinopathy image datasets, including:
+
+* APTOS 2019 Blindness Detection
+* EyePACS
+* IDRiD
+* Messidor / Messidor-2
+
+These datasets are useful references for developing and evaluating diabetic retinopathy detection systems.
+
+---
+
+## Why Explainability?
+
+A normal AI model may provide a prediction without clearly showing why it made that prediction.
+
+Grad-CAM provides a visual indication of the image regions that contributed more to the model's prediction. This can make the system easier to inspect and can help a healthcare professional understand the model's output.
+
+However, the heatmap should **not** be treated as proof that a specific retinal lesion is present.
+
+---
+
+## Limitations
+
+This project is currently a prototype and has several limitations:
+
+* It is not a certified medical device.
+* AI predictions should not be used as a final diagnosis.
+* Model performance depends on the quality and diversity of the training data.
+* Grad-CAM is an explanation of model attention, not a medical diagnosis.
+* A properly trained and validated model is required for real-world clinical use.
+* Further testing with clinical datasets and medical professionals would be required before practical deployment.
+
+---
+
+## Future Improvements
+
+Some possible future improvements are:
+
+* Train and evaluate the model on a larger dataset
+* Improve Grad-CAM explanations
+* Add more Indian regional languages
+* Add offline support for low-resource areas
+* Improve image quality checks
+* Add doctor/ophthalmologist review features
+* Explore deployment on low-cost devices
+* Perform proper clinical validation
+
+---
+
+## Disclaimer
+
+**RETINA-XAI is an educational and research prototype created for demonstration purposes. It is not intended to diagnose, treat, or replace a qualified medical professional. Any real medical decision should be made by an appropriately qualified healthcare professional.**
+
+---
+
+## Author
+
+**Aditya Gupta**
+
+B.Tech CSE (Data Science) Student
+
+Interested in AI, Data Science and Web Development.
