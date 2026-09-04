@@ -1,0 +1,7 @@
+﻿Flask>=3.0.0
+Pillow>=10.0.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+opencv-python>=4.8.0
+werkzeug>=3.0.0
+# tensorflow>=2.15.0  # Optional: For production TensorFlow/EfficientNetB0 inference on supported Python environments

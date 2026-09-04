@@ -1,0 +1,302 @@
+﻿{% extends "base.html" %}
+
+{% block title %}RETINA-XAI — Explainable AI for Diabetic Retinopathy Screening in Rural India{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-6">
+        <div class="d-inline-flex align-items-center gap-2 mb-3">
+          <span class="badge badge-pill-soft bg-primary-subtle text-primary border border-primary-subtle" data-i18n="badge.ai_assist">
+            <i class="bi bi-cpu-fill"></i> AI-ASSISTED RETINAL SCREENING
+          </span>
+          <span class="badge badge-pill-soft bg-teal-subtle text-teal border border-teal-subtle" style="background-color: var(--teal-light); color: var(--teal);" data-i18n="badge.rural">
+            <i class="bi bi-geo-alt-fill"></i> Rural Health Ready
+          </span>
+        </div>
+
+        <h1 class="display-5 fw-bold text-dark mb-3 lh-sm" data-i18n="hero.title">
+          Making Retinal Screening More Explainable and Accessible
+        </h1>
+
+        <p class="lead text-muted mb-4 fs-6" data-i18n="hero.subtitle">
+          RETINA-XAI helps healthcare workers screen retinal fundus images using AI while visualizing the regions that influenced the model's prediction. Designed specifically for community vision centres and rural health posts.
+        </p>
+
+        <div class="d-flex flex-wrap gap-3 mb-4">
+          <a href="{{ url_for('screening') }}" class="btn-primary-custom px-4 py-2 fs-6">
+            <i class="bi bi-arrow-right-circle"></i>
+            <span data-i18n="hero.btn_start">Start Screening</span>
+          </a>
+          <a href="#howItWorks" class="btn-outline-custom px-4 py-2 fs-6">
+            <i class="bi bi-diagram-3"></i>
+            <span data-i18n="hero.btn_how">Explore How It Works</span>
+          </a>
+        </div>
+
+        <div class="d-flex align-items-center gap-4 text-muted small pt-2">
+          <div class="d-flex align-items-center gap-1">
+            <i class="bi bi-check2-circle text-success fs-5"></i> 5-Class DR Grading
+          </div>
+          <div class="d-flex align-items-center gap-1">
+            <i class="bi bi-check2-circle text-success fs-5"></i> Grad-CAM Explainability
+          </div>
+          <div class="d-flex align-items-center gap-1">
+            <i class="bi bi-check2-circle text-success fs-5"></i> Doctor Referral Triage
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="hero-visual-card position-relative">
+          <img src="{{ url_for('static', filename='samples/sample_moderate_overlay.jpg') }}" alt="Retinal Fundus with Grad-CAM Heatmap" class="hero-retina-img">
+          
+          <!-- Floating Feature Badges -->
+          <div class="floating-pill floating-pill-1">
+            <i class="bi bi-robot text-primary fs-5"></i>
+            <div>
+              <div class="fw-bold text-dark" style="font-size: 0.8rem;">AI Screening</div>
+              <div class="text-muted" style="font-size: 0.72rem;">EfficientNetB0 Architecture</div>
+            </div>
+          </div>
+
+          <div class="floating-pill floating-pill-2">
+            <i class="bi bi-fire text-danger fs-5"></i>
+            <div>
+              <div class="fw-bold text-dark" style="font-size: 0.8rem;" data-i18n="badge.explainable">Explainable Grad-CAM</div>
+              <div class="text-muted" style="font-size: 0.72rem;">Saliency Attention Mapping</div>
+            </div>
+          </div>
+
+          <div class="floating-pill floating-pill-3">
+            <i class="bi bi-person-check text-success fs-5"></i>
+            <div>
+              <div class="fw-bold text-dark" style="font-size: 0.8rem;" data-i18n="badge.human_loop">Human-in-the-Loop</div>
+              <div class="text-muted" style="font-size: 0.72rem;">Doctor Review & Notes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Problem Section -->
+<section class="py-5 bg-white border-top border-bottom">
+  <div class="container">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="text-primary fw-bold small text-uppercase tracking-wide">Challenges in Underserved Eye Care</span>
+      <h2 class="fw-bold text-dark mt-1" data-i18n="problem.heading">Why RETINA-XAI?</h2>
+      <p class="text-muted" data-i18n="problem.subheading">Addressing the critical gap in rural eye-care accessibility across India</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="custom-card h-100 p-4 border-0 shadow-sm" style="background: #f8fafc;">
+          <div class="workflow-icon" style="background: rgba(15, 76, 129, 0.1); color: var(--primary);">
+            <i class="bi bi-hospital"></i>
+          </div>
+          <h4 class="fw-bold text-dark fs-5 mb-2" data-i18n="problem.card1_title">Limited Access</h4>
+          <p class="text-muted small mb-0" data-i18n="problem.card1_desc">
+            Specialized ophthalmic services may be difficult to access in underserved rural areas where patients face long travel times and clinical backlogs.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="custom-card h-100 p-4 border-0 shadow-sm" style="background: #f8fafc;">
+          <div class="workflow-icon" style="background: rgba(0, 168, 150, 0.12); color: var(--teal);">
+            <i class="bi bi-speedometer2"></i>
+          </div>
+          <h4 class="fw-bold text-dark fs-5 mb-2" data-i18n="problem.card2_title">AI-Assisted Screening</h4>
+          <p class="text-muted small mb-0" data-i18n="problem.card2_desc">
+            AI helps prioritize retinal images that need further specialist evaluation, accelerating triage without pretending to replace an ophthalmologist.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="custom-card h-100 p-4 border-0 shadow-sm" style="background: #f8fafc;">
+          <div class="workflow-icon" style="background: rgba(245, 158, 11, 0.12); color: var(--warning);">
+            <i class="bi bi-lightbulb"></i>
+          </div>
+          <h4 class="fw-bold text-dark fs-5 mb-2" data-i18n="problem.card3_title">Explainable Decisions</h4>
+          <p class="text-muted small mb-0" data-i18n="problem.card3_desc">
+            Visual explanations help users understand which image regions contributed to the model's prediction, fostering clinical confidence and transparency.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="howItWorks" class="py-5" style="background-color: var(--bg-main);">
+  <div class="container">
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="text-primary fw-bold small text-uppercase tracking-wide">End-to-End Workflow</span>
+      <h2 class="fw-bold text-dark mt-1" data-i18n="workflow.heading">How It Works</h2>
+      <p class="text-muted" data-i18n="workflow.subheading">A 5-step clinical screening and explainability pipeline</p>
+    </div>
+
+    <div class="row g-3 g-lg-4">
+      <div class="col-lg col-md-4 col-sm-6">
+        <div class="workflow-step-card">
+          <div class="workflow-step-num">01</div>
+          <div class="workflow-icon"><i class="bi bi-cloud-upload"></i></div>
+          <h5 class="fw-bold text-dark fs-6" data-i18n="step1.title">Upload</h5>
+          <p class="text-muted small mb-0" data-i18n="step1.desc">Retinal fundus image</p>
+        </div>
+      </div>
+
+      <div class="col-lg col-md-4 col-sm-6">
+        <div class="workflow-step-card">
+          <div class="workflow-step-num">02</div>
+          <div class="workflow-icon"><i class="bi bi-gear-wide-connected"></i></div>
+          <h5 class="fw-bold text-dark fs-6" data-i18n="step2.title">Analyze</h5>
+          <p class="text-muted small mb-0" data-i18n="step2.desc">AI processes the image</p>
+        </div>
+      </div>
+
+      <div class="col-lg col-md-4 col-sm-6">
+        <div class="workflow-step-card">
+          <div class="workflow-step-num">03</div>
+          <div class="workflow-icon"><i class="bi bi-graph-up-arrow"></i></div>
+          <h5 class="fw-bold text-dark fs-6" data-i18n="step3.title">Predict</h5>
+          <p class="text-muted small mb-0" data-i18n="step3.desc">DR severity and confidence</p>
+        </div>
+      </div>
+
+      <div class="col-lg col-md-4 col-sm-6">
+        <div class="workflow-step-card">
+          <div class="workflow-step-num">04</div>
+          <div class="workflow-icon"><i class="bi bi-fire"></i></div>
+          <h5 class="fw-bold text-dark fs-6" data-i18n="step4.title">Explain</h5>
+          <p class="text-muted small mb-0" data-i18n="step4.desc">Grad-CAM highlights important regions</p>
+        </div>
+      </div>
+
+      <div class="col-lg col-md-4 col-sm-6">
+        <div class="workflow-step-card">
+          <div class="workflow-step-num">05</div>
+          <div class="workflow-icon"><i class="bi bi-clipboard2-pulse"></i></div>
+          <h5 class="fw-bold text-dark fs-6" data-i18n="step5.title">Review</h5>
+          <p class="text-muted small mb-0" data-i18n="step5.desc">Healthcare worker reviews and records notes</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Rural India Section -->
+<section class="py-5 bg-white border-top">
+  <div class="container">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-6">
+        <span class="text-teal fw-bold small text-uppercase tracking-wide" style="color: var(--teal);">Designed For Underserved Communities</span>
+        <h2 class="fw-bold text-dark mt-1 mb-3" data-i18n="rural.heading">Designed with Rural Healthcare in Mind</h2>
+        <p class="text-muted mb-4" data-i18n="rural.subheading">
+          Empowering primary health centres (PHCs), rural vision camps, and community health workers with lightweight, explainable triage tools.
+        </p>
+
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-translate text-primary fs-5 mt-1"></i>
+              <div>
+                <h6 class="fw-bold mb-1">Bilingual Interface</h6>
+                <p class="text-muted small mb-0">English + हिन्दी language support for frontline field operators.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-wifi-off text-primary fs-5 mt-1"></i>
+              <div>
+                <h6 class="fw-bold mb-1">Low-Complexity Flow</h6>
+                <p class="text-muted small mb-0">Streamlined 1-click execution designed for intermittent rural connectivity.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-camera-fill text-primary fs-5 mt-1"></i>
+              <div>
+                <h6 class="fw-bold mb-1">Fundus Camera Agnostic</h6>
+                <p class="text-muted small mb-0">Compatible with portable handheld or tabletop non-mydriatic cameras.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="d-flex align-items-start gap-2">
+              <i class="bi bi-send-check text-primary fs-5 mt-1"></i>
+              <div>
+                <h6 class="fw-bold mb-1">District Hospital Referral</h6>
+                <p class="text-muted small mb-0">Structured referral recommendations for tele-ophthalmology escalation.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a href="{{ url_for('screening') }}" class="btn-primary-custom">
+          <i class="bi bi-eye"></i> Start New Screening Now
+        </a>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="custom-card p-4 shadow-sm" style="background: #f8fafc;">
+          <h5 class="fw-bold text-dark mb-4 text-center">
+            <i class="bi bi-diagram-2 text-primary me-2"></i>Rural Triage Workflow Architecture
+          </h5>
+
+          <div class="d-flex flex-column gap-3">
+            <div class="d-flex align-items-center justify-content-between p-2 bg-white rounded border">
+              <span class="fw-semibold text-dark"><i class="bi bi-building me-2 text-primary"></i>Rural Health Centre</span>
+              <span class="badge bg-light text-muted border">Local PHC</span>
+            </div>
+            <div class="text-center text-muted fs-5"><i class="bi bi-arrow-down"></i></div>
+            
+            <div class="d-flex align-items-center justify-content-between p-2 bg-white rounded border">
+              <span class="fw-semibold text-dark"><i class="bi bi-camera me-2 text-primary"></i>Non-Mydriatic Fundus Camera</span>
+              <span class="badge bg-light text-muted border">Retina Capture</span>
+            </div>
+            <div class="text-center text-muted fs-5"><i class="bi bi-arrow-down"></i></div>
+
+            <div class="d-flex align-items-center justify-content-between p-2 rounded border" style="background-color: var(--primary-light); border-color: var(--primary) !important;">
+              <span class="fw-bold text-primary"><i class="bi bi-cpu-fill me-2"></i>RETINA-XAI Screening & Grad-CAM</span>
+              <span class="badge bg-primary text-white">AI + Explainability</span>
+            </div>
+            <div class="text-center text-muted fs-5"><i class="bi bi-arrow-down"></i></div>
+
+            <div class="d-flex align-items-center justify-content-between p-2 bg-white rounded border">
+              <span class="fw-semibold text-dark"><i class="bi bi-shield-check me-2 text-warning"></i>Risk Classification & Doctor Notes</span>
+              <span class="badge bg-light text-muted border">Human Review</span>
+            </div>
+            <div class="text-center text-muted fs-5"><i class="bi bi-arrow-down"></i></div>
+
+            <div class="d-flex align-items-center justify-content-between p-2 bg-white rounded border">
+              <span class="fw-semibold text-dark"><i class="bi bi-hospital me-2 text-success"></i>District Hospital / Ophthalmologist Referral</span>
+              <span class="badge bg-success-subtle text-success border border-success-subtle">Timely Treatment</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="py-5" style="background: linear-gradient(135deg, var(--primary), #09335a); color: white;">
+  <div class="container text-center py-3">
+    <h2 class="fw-bold text-white mb-3">Ready to Test Retinal Screening with Explainable AI?</h2>
+    <p class="text-white-50 max-w-600 mx-auto mb-4">
+      Experience the end-to-end clinical triage workflow: upload a retinal image, inspect AI confidence, view Grad-CAM heatmaps, and record healthcare notes.
+    </p>
+    <a href="{{ url_for('screening') }}" class="btn btn-light btn-lg px-4 fw-bold text-primary shadow">
+      <i class="bi bi-play-circle-fill me-2"></i> Launch Retinal Screening
+    </a>
+  </div>
+</section>
+{% endblock %}

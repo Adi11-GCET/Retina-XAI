@@ -1,0 +1,147 @@
+﻿{% extends "base.html" %}
+
+{% block title %}New Screening — RETINA-XAI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="text-center max-w-700 mx-auto mb-5">
+    <span class="badge badge-pill-soft bg-primary-subtle text-primary border border-primary-subtle mb-2" data-i18n="badge.ai_assist">
+      <i class="bi bi-cpu-fill"></i> AI-ASSISTED RETINAL SCREENING
+    </span>
+    <h1 class="display-6 fw-bold text-dark mb-2" data-i18n="screening.title">New Retinal Screening</h1>
+    <p class="text-muted" data-i18n="screening.subtitle">
+      Upload a retinal fundus photograph to begin AI-assisted screening, or select a preloaded clinical reference case.
+    </p>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="custom-card shadow-sm p-4 p-md-5">
+        
+        <!-- Clinical Sample Selector -->
+        <div class="mb-4">
+          <label class="form-label fw-bold text-dark small mb-2 d-flex align-items-center gap-2">
+            <i class="bi bi-collection-play-fill text-teal"></i>
+            <span data-i18n="screening.sample_prompt">Or select a preloaded clinical sample case:</span>
+          </label>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="sample-pill-btn" data-sample="sample_no_dr.jpg" data-label="No DR (Normal)" data-src="{{ url_for('static', filename='samples/sample_no_dr.jpg') }}">
+              <img src="{{ url_for('static', filename='samples/sample_no_dr.jpg') }}" alt="No DR" class="sample-thumb-mini">
+              <span data-i18n="screening.sample_0">No DR (Normal)</span>
+            </button>
+            <button type="button" class="sample-pill-btn" data-sample="sample_mild.jpg" data-label="Mild DR" data-src="{{ url_for('static', filename='samples/sample_mild.jpg') }}">
+              <img src="{{ url_for('static', filename='samples/sample_mild.jpg') }}" alt="Mild DR" class="sample-thumb-mini">
+              <span data-i18n="screening.sample_1">Mild DR</span>
+            </button>
+            <button type="button" class="sample-pill-btn" data-sample="sample_moderate.jpg" data-label="Moderate DR" data-src="{{ url_for('static', filename='samples/sample_moderate.jpg') }}">
+              <img src="{{ url_for('static', filename='samples/sample_moderate.jpg') }}" alt="Moderate DR" class="sample-thumb-mini">
+              <span data-i18n="screening.sample_2">Moderate DR</span>
+            </button>
+            <button type="button" class="sample-pill-btn" data-sample="sample_severe.jpg" data-label="Severe DR" data-src="{{ url_for('static', filename='samples/sample_severe.jpg') }}">
+              <img src="{{ url_for('static', filename='samples/sample_severe.jpg') }}" alt="Severe DR" class="sample-thumb-mini">
+              <span data-i18n="screening.sample_3">Severe DR</span>
+            </button>
+            <button type="button" class="sample-pill-btn" data-sample="sample_proliferative.jpg" data-label="Proliferative DR" data-src="{{ url_for('static', filename='samples/sample_proliferative.jpg') }}">
+              <img src="{{ url_for('static', filename='samples/sample_proliferative.jpg') }}" alt="Proliferative DR" class="sample-thumb-mini">
+              <span data-i18n="screening.sample_4">Proliferative DR</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="position-relative my-4 text-center">
+          <hr class="text-muted opacity-25">
+          <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small fw-semibold" data-i18n="screening.or">OR UPLOAD FUNDUS IMAGE</span>
+        </div>
+
+        <!-- Form -->
+        <form id="screeningForm" enctype="multipart/form-data">
+          <input type="file" id="retinaFileInput" name="image" accept=".jpg,.jpeg,.png" class="d-none">
+          <input type="hidden" id="sampleInput" name="sample_name" value="">
+
+          <!-- Drag and Drop Zone -->
+          <div id="uploadDropzone" class="upload-dropzone mb-4">
+            <div class="upload-icon-circle">
+              <i class="bi bi-camera"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-1" data-i18n="screening.drag_drop">Drag and drop your fundus image here</h5>
+            <p class="text-muted small mb-3" data-i18n="screening.or">or</p>
+            <button type="button" class="btn btn-outline-primary btn-sm px-4 fw-semibold rounded-pill" data-i18n="screening.browse">
+              <i class="bi bi-folder2-open me-1"></i> Browse Files
+            </button>
+            <div class="text-muted small mt-3" data-i18n="screening.supported">
+              Supported: JPG, JPEG, PNG &bull; Maximum file size: 10 MB
+            </div>
+          </div>
+
+          <!-- Preview Card (Initially Hidden) -->
+          <div id="previewCard" class="preview-container mb-4 d-none">
+            <img id="previewImage" src="" alt="Retinal Fundus Preview" class="preview-thumb">
+            <div class="flex-grow-1 text-start">
+              <h6 id="previewFilename" class="fw-bold text-dark mb-1">retina_image.jpg</h6>
+              <div id="previewFilesize" class="text-muted small mb-2">1.4 MB</div>
+              <div class="d-flex gap-2">
+                <button type="button" id="changeImageBtn" class="btn btn-sm btn-outline-secondary py-1 px-3" onclick="document.getElementById('retinaFileInput').click()">
+                  <i class="bi bi-arrow-repeat me-1"></i> Change
+                </button>
+                <button type="button" id="removeImageBtn" class="btn btn-sm btn-outline-danger py-1 px-3">
+                  <i class="bi bi-trash me-1"></i> Remove
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Primary Submit Button -->
+          <div class="d-grid">
+            <button type="submit" id="analyzeBtn" class="btn-primary-custom justify-content-center py-3 fs-5" disabled>
+              <i class="bi bi-cpu-fill"></i>
+              <span data-i18n="screening.btn_analyze">Analyze Retina</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="mt-4 p-3 bg-light rounded text-center small text-muted">
+          <i class="bi bi-shield-check me-1 text-success"></i> 
+          <strong>Privacy Guaranteed:</strong> No patient identifiers are stored. Images are processed locally on device/server.
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Multi-Stage Processing Loading Overlay -->
+<div id="processingOverlay" class="processing-overlay">
+  <div class="processing-card">
+    <div class="spinner-grow text-primary mb-3" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
+    <h4 class="fw-bold text-dark mb-2" data-i18n="processing.heading">Analyzing retinal image...</h4>
+    <p class="text-muted small mb-4">Please wait while the AI screening pipeline evaluates the fundus photograph.</p>
+
+    <div class="text-start">
+      <div id="stage-1" class="stage-item">
+        <i class="bi bi-circle stage-icon"></i>
+        <span data-i18n="stage.1">Image uploaded and validated</span>
+      </div>
+      <div id="stage-2" class="stage-item">
+        <i class="bi bi-circle stage-icon"></i>
+        <span data-i18n="stage.2">Preprocessing fundus & CLAHE enhancement</span>
+      </div>
+      <div id="stage-3" class="stage-item">
+        <i class="bi bi-circle stage-icon"></i>
+        <span data-i18n="stage.3">Running EfficientNetB0 screening model</span>
+      </div>
+      <div id="stage-4" class="stage-item">
+        <i class="bi bi-circle stage-icon"></i>
+        <span data-i18n="stage.4">Generating Grad-CAM visual explanation</span>
+      </div>
+      <div id="stage-5" class="stage-item">
+        <i class="bi bi-circle stage-icon"></i>
+        <span data-i18n="stage.5">Preparing clinical screening report</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/screening.js') }}"></script>
+{% endblock %}

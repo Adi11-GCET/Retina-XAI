@@ -1,0 +1,115 @@
+{
+  "dataset": "IDRiD (Indian Diabetic Retinopathy Image Dataset)",
+  "total_images": 81,
+  "train_count": 54,
+  "val_count": 27,
+  "best_val_accuracy": 37.03703703703704,
+  "epochs": 15,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.9283,
+      "train_acc": 27.8,
+      "val_loss": 1.9323,
+      "val_acc": 44.4
+    },
+    {
+      "epoch": 2,
+      "train_loss": 1.6749,
+      "train_acc": 46.3,
+      "val_loss": 1.7056,
+      "val_acc": 44.4
+    },
+    {
+      "epoch": 3,
+      "train_loss": 1.4972,
+      "train_acc": 50.0,
+      "val_loss": 1.5415,
+      "val_acc": 44.4
+    },
+    {
+      "epoch": 4,
+      "train_loss": 1.4479,
+      "train_acc": 37.0,
+      "val_loss": 1.5361,
+      "val_acc": 33.3
+    },
+    {
+      "epoch": 5,
+      "train_loss": 1.3376,
+      "train_acc": 55.6,
+      "val_loss": 1.428,
+      "val_acc": 33.3
+    },
+    {
+      "epoch": 6,
+      "train_loss": 1.3427,
+      "train_acc": 46.3,
+      "val_loss": 1.5385,
+      "val_acc": 33.3
+    },
+    {
+      "epoch": 7,
+      "train_loss": 1.4169,
+      "train_acc": 38.9,
+      "val_loss": 1.4901,
+      "val_acc": 37.0
+    },
+    {
+      "epoch": 8,
+      "train_loss": 1.2699,
+      "train_acc": 46.3,
+      "val_loss": 1.4227,
+      "val_acc": 40.7
+    },
+    {
+      "epoch": 9,
+      "train_loss": 1.3067,
+      "train_acc": 48.1,
+      "val_loss": 1.3939,
+      "val_acc": 40.7
+    },
+    {
+      "epoch": 10,
+      "train_loss": 1.28,
+      "train_acc": 48.1,
+      "val_loss": 1.4424,
+      "val_acc": 40.7
+    },
+    {
+      "epoch": 11,
+      "train_loss": 1.2722,
+      "train_acc": 42.6,
+      "val_loss": 1.5067,
+      "val_acc": 37.0
+    },
+    {
+      "epoch": 12,
+      "train_loss": 1.2255,
+      "train_acc": 46.3,
+      "val_loss": 1.5066,
+      "val_acc": 37.0
+    },
+    {
+      "epoch": 13,
+      "train_loss": 1.2,
+      "train_acc": 53.7,
+      "val_loss": 1.528,
+      "val_acc": 37.0
+    },
+    {
+      "epoch": 14,
+      "train_loss": 1.2563,
+      "train_acc": 44.4,
+      "val_loss": 1.5326,
+      "val_acc": 37.0
+    },
+    {
+      "epoch": 15,
+      "train_loss": 1.2508,
+      "train_acc": 57.4,
+      "val_loss": 1.5285,
+      "val_acc": 37.0
+    }
+  ]
+}

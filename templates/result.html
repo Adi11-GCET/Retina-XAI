@@ -1,0 +1,271 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Screening Result: {{ screening.patient_id }} — RETINA-XAI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  
+  <!-- Top Bar -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-primary px-3 py-1 text-white" style="font-size: 0.9rem;">
+          <i class="bi bi-person-badge me-1"></i> {{ screening.patient_id }}
+        </span>
+        {% if screening.is_demo %}
+        <span class="badge badge-demo">DEMONSTRATION RECORD</span>
+        {% endif %}
+      </div>
+      <h1 class="h3 fw-bold text-dark mb-0" data-i18n="result.title">AI Screening Result</h1>
+      <div class="text-muted small">
+        <i class="bi bi-clock me-1"></i> {{ screening.created_at }} &bull; Standard Non-Mydriatic Fundus
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="window.print()">
+        <i class="bi bi-printer me-1"></i> <span data-i18n="review.btn_print">Print / Export Report</span>
+      </button>
+      <a href="{{ url_for('screening') }}" class="btn btn-primary-custom btn-sm px-3">
+        <i class="bi bi-plus-circle me-1"></i> <span data-i18n="nav.new_screening">New Screening</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Prediction & Probabilities -->
+    <div class="col-lg-5">
+      
+      <!-- Primary Prediction Card -->
+      <div class="custom-card mb-4 border-0 shadow-sm text-center">
+        <span class="badge badge-pill-soft {% if screening.class_id == 0 %}bg-success-subtle text-success border-success-subtle{% elif screening.class_id == 1 %}bg-info-subtle text-info border-info-subtle{% elif screening.class_id == 2 %}bg-warning-subtle text-warning border-warning-subtle{% else %}bg-danger-subtle text-danger border-danger-subtle{% endif %} mb-3">
+          SEVERITY GRADE {{ screening.class_id }} OF 4
+        </span>
+
+        <h3 class="fw-bold text-dark mb-3">{{ screening.prediction }}</h3>
+
+        <!-- Circular Confidence Score -->
+        <div class="circular-progress-wrapper mb-3">
+          <svg width="140" height="140" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" stroke="#e2e8f0" stroke-width="8" fill="none" />
+            <circle cx="50" cy="50" r="42" stroke="{% if screening.class_id == 0 %}#10b981{% elif screening.class_id == 1 %}#0284c7{% elif screening.class_id == 2 %}#f59e0b{% else %}#ef4444{% endif %}" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="{{ 264 - (264 * screening.confidence / 100) }}" stroke-linecap="round" fill="none" />
+          </svg>
+          <div class="circular-progress-text">
+            <div class="display-6 fw-bold text-dark lh-1">{{ screening.confidence|round(0)|int }}%</div>
+            <div class="text-muted small text-uppercase" style="font-size: 0.68rem;" data-i18n="result.confidence">Confidence</div>
+          </div>
+        </div>
+
+        <p class="text-muted small mb-0 px-3">
+          Classification generated via <strong>EfficientNetB0</strong> neural network calibrated for 5-class diabetic retinopathy severity detection.
+        </p>
+      </div>
+
+      <!-- Five-Class Probabilities Card -->
+      <div class="custom-card mb-4 border-0 shadow-sm">
+        <h6 class="fw-bold text-dark mb-3 d-flex align-items-center justify-content-between">
+          <span data-i18n="result.probabilities">Five-Class Probability Distribution</span>
+          <span class="badge bg-light text-muted border">Softmax</span>
+        </h6>
+
+        {% set class_names = ['No DR', 'Mild DR', 'Moderate DR', 'Severe DR', 'Proliferative DR'] %}
+        {% for p in screening.probabilities %}
+        <div class="mb-2">
+          <div class="prob-bar-label">
+            <span class="{% if loop.index0 == screening.class_id %}fw-bold text-primary{% else %}text-muted{% endif %}">
+              {{ loop.index0 }} — {{ class_names[loop.index0] }}
+            </span>
+            <span class="{% if loop.index0 == screening.class_id %}fw-bold text-primary{% else %}text-muted{% endif %}">
+              {{ p }}%
+            </span>
+          </div>
+          <div class="progress progress-custom">
+            <div class="progress-bar {% if loop.index0 == screening.class_id %}bg-primary{% else %}bg-secondary opacity-50{% endif %}" style="width: {{ p }}%"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Clinical Triage Status Card -->
+      <div class="custom-card border-0 shadow-sm mb-4" style="background-color: {% if screening.referral_required or screening.class_id >= 2 %}#fff7ed{% else %}#f0fdf4{% endif %}; border-left: 5px solid {% if screening.referral_required or screening.class_id >= 2 %}#f97316{% else %}#10b981{% endif %} !important;">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          {% if screening.referral_required or screening.class_id >= 2 %}
+          <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+          <h6 class="fw-bold text-dark mb-0">REFER FOR FURTHER EVALUATION</h6>
+          {% else %}
+          <i class="bi bi-check-circle-fill text-success fs-5"></i>
+          <h6 class="fw-bold text-dark mb-0">ROUTINE ANNUAL MONITORING</h6>
+          {% endif %}
+        </div>
+        <p class="text-secondary small mb-2">
+          {{ screening.risk_status }}
+        </p>
+        <div class="text-muted" style="font-size: 0.78rem;">
+          <i class="bi bi-info-circle me-1"></i> Triage guidance adheres to international diabetic retinopathy clinical practice standards.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Grad-CAM Explainable AI & Human Review -->
+    <div class="col-lg-7">
+      
+      <!-- WOW Feature: Grad-CAM Section -->
+      <div class="custom-card border-0 shadow-sm mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+          <div>
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle small fw-bold mb-1">
+              <i class="bi bi-fire me-1"></i> EXPLAINABLE AI (XAI)
+            </span>
+            <h4 class="fw-bold text-dark mb-0" data-i18n="result.explain_heading">Why did the AI make this prediction?</h4>
+          </div>
+          
+          <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-outline-primary active" id="viewOverlayBtn" onclick="switchImageView('overlay')">
+              <i class="bi bi-layers-half me-1"></i> <span data-i18n="result.tab_overlay">Overlay</span>
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="viewHeatmapBtn" onclick="switchImageView('heatmap')">
+              <i class="bi bi-fire me-1"></i> <span data-i18n="result.tab_heatmap">Heatmap</span>
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="viewOriginalBtn" onclick="switchImageView('original')">
+              <i class="bi bi-image me-1"></i> <span data-i18n="result.tab_original">Original</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Image Display Frame -->
+        <div class="gradcam-view-card mb-3">
+          <img id="mainRetinaDisplay" src="{{ url_for('static', filename=screening.overlay_path.replace('static/', '')) }}" alt="Grad-CAM Visualization" class="gradcam-img-display shadow">
+        </div>
+
+        <!-- Attention Legend -->
+        <div class="p-3 bg-light rounded mb-3">
+          <div class="d-flex justify-content-between text-muted small fw-bold">
+            <span data-i18n="result.legend_low">Low Attention (Cold)</span>
+            <span data-i18n="result.legend_med">Medium Attention</span>
+            <span data-i18n="result.legend_high">High Attention (Hot)</span>
+          </div>
+          <div class="legend-bar"></div>
+        </div>
+
+        <!-- Explanation Text -->
+        <div class="mb-3">
+          <h6 class="fw-bold text-dark mb-1" data-i18n="result.explanation_title">AI Visual Explanation</h6>
+          <p class="text-muted small mb-2">
+            The highlighted regions indicate areas of the retinal image that contributed most strongly to the model's classification score. Warm hues (red and amber) represent high feature saliency where convolutional activations were peak.
+          </p>
+        </div>
+
+        <!-- Explicit Model Disclaimer Box -->
+        <div class="alert alert-warning border-warning-subtle d-flex align-items-start gap-2 mb-0 py-2 px-3" style="font-size: 0.82rem;">
+          <i class="bi bi-shield-exclamation text-warning fs-5 flex-shrink-0"></i>
+          <div>
+            <strong>Important Disclaimer:</strong>
+            <span data-i18n="result.disclaimer_box">
+              The heatmap represents model attention and is not proof that a specific lesion is present. It serves as visual decision support for qualified healthcare review.
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Human Review & Clinical Notes Form -->
+      <div class="custom-card border-0 shadow-sm mb-4">
+        <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+          <i class="bi bi-pencil-square text-primary"></i>
+          <span data-i18n="review.title">Human Review & Clinical Documentation</span>
+        </h5>
+
+        <form id="notesForm" action="{{ url_for('save_screening') }}" method="POST">
+          <input type="hidden" name="screening_id" value="{{ screening.id }}">
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark small" data-i18n="review.notes_label">
+              Observations & Clinical Notes
+            </label>
+            <textarea id="doctorNotes" name="notes" rows="3" class="form-control" placeholder="Enter clinical observations, retinal examination notes, or patient history..." data-i18n-ph="review.notes_placeholder">{{ screening.notes }}</textarea>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-bold text-dark small" data-i18n="review.referral_label">
+              Referral Required to Specialist / District Hospital?
+            </label>
+            <div class="d-flex flex-column gap-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="referral_required" id="referralYes" value="1" {% if screening.referral_required == 1 %}checked{% endif %}>
+                <label class="form-check-label fw-medium text-dark small" for="referralYes" data-i18n="review.ref_yes">
+                  Yes — Refer for specialist ophthalmic evaluation
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="referral_required" id="referralNo" value="0" {% if screening.referral_required == 0 %}checked{% endif %}>
+                <label class="form-check-label fw-medium text-dark small" for="referralNo" data-i18n="review.ref_no">
+                  No — Routine follow-up at primary vision centre
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="document.getElementById('doctorNotes').value = ''" data-i18n="review.btn_clear">
+              Clear Notes
+            </button>
+            <button type="submit" class="btn btn-primary-custom px-4">
+              <i class="bi bi-save me-1"></i> <span data-i18n="review.btn_save">Save Screening Report</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const originalPath = "{{ url_for('static', filename=screening.image_path.replace('static/', '')) }}";
+  const heatmapPath = "{{ url_for('static', filename=screening.heatmap_path.replace('static/', '')) }}";
+  const overlayPath = "{{ url_for('static', filename=screening.overlay_path.replace('static/', '')) }}";
+
+  function switchImageView(view) {
+    const imgEl = document.getElementById('mainRetinaDisplay');
+    const btnOrig = document.getElementById('viewOriginalBtn');
+    const btnHeat = document.getElementById('viewHeatmapBtn');
+    const btnOver = document.getElementById('viewOverlayBtn');
+
+    [btnOrig, btnHeat, btnOver].forEach(b => b.classList.remove('active'));
+
+    if (view === 'original') {
+      imgEl.src = originalPath;
+      btnOrig.classList.add('active');
+    } else if (view === 'heatmap') {
+      imgEl.src = heatmapPath;
+      btnHeat.classList.add('active');
+    } else {
+      imgEl.src = overlayPath;
+      btnOver.classList.add('active');
+    }
+  }
+
+  // Handle notes form submit with feedback
+  document.getElementById('notesForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    try {
+      const res = await fetch('/save-screening', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Screening report and notes successfully saved to database!', 'success');
+      } else {
+        showToast(data.error || 'Failed to update record.', 'danger');
+      }
+    } catch (err) {
+      showToast('Network error while saving report.', 'danger');
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,142 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Dashboard — RETINA-XAI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="display-6 fw-bold text-dark mb-1" data-i18n="dash.title">Screening Dashboard</h1>
+      <p class="text-muted small mb-0">Aggregate statistical overview of diabetic retinopathy screenings recorded in clinic database.</p>
+    </div>
+    <div>
+      <a href="{{ url_for('screening') }}" class="btn-primary-custom btn-sm">
+        <i class="bi bi-plus-circle me-1"></i> <span data-i18n="nav.new_screening">New Screening</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric Counters Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="custom-card p-3 border-0 shadow-sm text-center">
+        <div class="text-muted small fw-bold text-uppercase" data-i18n="dash.total">Total Screenings</div>
+        <div class="display-6 fw-bold text-primary mt-1">{{ stats.total }}</div>
+        <div class="text-muted" style="font-size: 0.72rem;">Database Records</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="custom-card p-3 border-0 shadow-sm text-center">
+        <div class="text-success small fw-bold text-uppercase" data-i18n="dash.no_dr">No DR (0)</div>
+        <div class="display-6 fw-bold text-success mt-1">{{ stats.no_dr }}</div>
+        <div class="text-muted" style="font-size: 0.72rem;">Normal Limits</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="custom-card p-3 border-0 shadow-sm text-center">
+        <div class="text-info small fw-bold text-uppercase" data-i18n="dash.mild">Mild DR (1)</div>
+        <div class="display-6 fw-bold text-info mt-1">{{ stats.mild }}</div>
+        <div class="text-muted" style="font-size: 0.72rem;">Early Microaneurysms</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="custom-card p-3 border-0 shadow-sm text-center">
+        <div class="text-warning small fw-bold text-uppercase" data-i18n="dash.moderate">Moderate (2)</div>
+        <div class="display-6 fw-bold text-warning mt-1">{{ stats.moderate }}</div>
+        <div class="text-muted" style="font-size: 0.72rem;">Referral Advisory</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="custom-card p-3 border-0 shadow-sm text-center">
+        <div class="text-danger small fw-bold text-uppercase" data-i18n="dash.severe">Severe (3)</div>
+        <div class="display-6 fw-bold text-danger mt-1">{{ stats.severe }}</div>
+        <div class="text-muted" style="font-size: 0.72rem;">Urgent Specialist</div>
+      </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-6">
+      <div class="custom-card p-3 border-0 shadow-sm text-center">
+        <div class="text-danger small fw-bold text-uppercase" data-i18n="dash.pdr">Proliferative (4)</div>
+        <div class="display-6 fw-bold text-danger mt-1">{{ stats.proliferative }}</div>
+        <div class="text-muted" style="font-size: 0.72rem;">Critical Vitreo-Retinal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Referral Alert Metric -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="custom-card p-3 border-0 shadow-sm d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #fff7ed, #ffffff); border-left: 4px solid #f97316 !important;">
+        <div>
+          <span class="text-warning fw-bold small text-uppercase">Triage Escalation</span>
+          <h5 class="fw-bold text-dark mb-1">Referrals Recommended</h5>
+          <p class="text-muted small mb-0">{{ stats.referrals_needed }} patients flagged for specialist ophthalmologist review</p>
+        </div>
+        <div class="text-end">
+          <span class="display-6 fw-bold text-warning">{{ stats.referral_rate }}%</span>
+          <div class="text-muted small" data-i18n="dash.referral_rate">Referral Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="custom-card p-3 border-0 shadow-sm d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #ecfdf5, #ffffff); border-left: 4px solid #10b981 !important;">
+        <div>
+          <span class="text-success fw-bold small text-uppercase">Primary Care Triage</span>
+          <h5 class="fw-bold text-dark mb-1">Managed at Local Vision Centre</h5>
+          <p class="text-muted small mb-0">{{ stats.total - stats.referrals_needed }} patients cleared for regular monitoring without specialist trip</p>
+        </div>
+        <div class="text-end">
+          <span class="display-6 fw-bold text-success">{{ (100 - stats.referral_rate)|round(1) }}%</span>
+          <div class="text-muted small">Local Follow-up</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="row g-4 mb-4">
+    <!-- Chart 1: Doughnut Distribution -->
+    <div class="col-lg-4">
+      <div class="custom-card border-0 shadow-sm h-100">
+        <h6 class="fw-bold text-dark mb-3" data-i18n="dash.chart_dist">Screening Severity Distribution</h6>
+        <div style="height: 260px; position: relative;">
+          <canvas id="distributionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 2: Severity Bar Chart -->
+    <div class="col-lg-4">
+      <div class="custom-card border-0 shadow-sm h-100">
+        <h6 class="fw-bold text-dark mb-3" data-i18n="dash.chart_classes">Cumulative Class Counts</h6>
+        <div style="height: 260px; position: relative;">
+          <canvas id="severityChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 3: Trends Line Chart -->
+    <div class="col-lg-4">
+      <div class="custom-card border-0 shadow-sm h-100">
+        <h6 class="fw-bold text-dark mb-3" data-i18n="dash.chart_trends">Recent Screening Confidence Trend</h6>
+        <div style="height: 260px; position: relative;">
+          <canvas id="trendsChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center text-muted small">
+    <i class="bi bi-info-circle me-1"></i> Data automatically synchronizes from local clinic SQLite database storage.
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
