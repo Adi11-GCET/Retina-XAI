@@ -1,4 +1,4 @@
-﻿import os
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,7 +8,8 @@ import cv2
 
 from train_model import RetinaXAIModel
 
-model_path = r"C:\Users\Aditiya Gupta\.gemini\antigravity\scratch\retina-xai\model\retina_idrid_model.pth"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(BASE_DIR, "model", "retina_idrid_model.pth")
 checkpoint = torch.load(model_path, map_location="cpu")
 
 model = RetinaXAIModel(num_classes=5, num_lesions=4)
@@ -16,7 +17,7 @@ model.load_state_dict(checkpoint["model_state_dict"])
 model.eval()
 print("PyTorch model loaded successfully from checkpoint!")
 
-test_img_path = r"C:\Users\Aditiya Gupta\.gemini\antigravity\scratch\retina-xai\data\preprocessed\images\IDRiD_55.jpg"
+test_img_path = os.path.join(BASE_DIR, "static", "samples", "sample_moderate.jpg")
 img = Image.open(test_img_path).convert("RGB").resize((224, 224))
 arr = np.array(img, dtype=np.float32) / 255.0
 mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
@@ -28,6 +29,7 @@ input_tensor.requires_grad = True
 
 # Forward pass with Grad-CAM
 features = model.forward_features(input_tensor)
+features.register_hook(model.activations_hook)
 pooled = model.pool(features).flatten(1)
 dr_logits = model.dr_classifier(pooled)
 lesion_logits = model.lesion_detector(pooled)

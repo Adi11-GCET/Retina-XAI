@@ -1,10 +1,19 @@
-﻿import os
+import os
+import gc
+import time
 import cv2
 import numpy as np
 import json
 import torch
 import torch.nn.functional as F
 from PIL import Image
+
+# Enforce single-thread CPU execution to prevent thread contention on 0.1 CPU
+torch.set_num_threads(1)
+try:
+    torch.set_num_interop_threads(1)
+except Exception:
+    pass
 
 from train_model import RetinaXAIModel
 
@@ -78,8 +87,11 @@ _MODEL_INFO = "Demo Mode"
 
 def initialize_model():
     global _PYTORCH_MODEL, _IS_DEMO, _MODEL_INFO
+    if _PYTORCH_MODEL is not None:
+        return _PYTORCH_MODEL
     model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'model', 'retina_idrid_model.pth')
     if os.path.exists(model_path):
+        t0 = time.perf_counter()
         try:
             checkpoint = torch.load(model_path, map_location="cpu")
             model = RetinaXAIModel(num_classes=5, num_lesions=4)
@@ -88,42 +100,54 @@ def initialize_model():
             _PYTORCH_MODEL = model
             _IS_DEMO = False
             _MODEL_INFO = f"Trained on IDRiD Dataset (Indian Cohort, Epochs: {checkpoint.get('epoch', 15)})"
-            print(f"[RETINA-XAI] Successfully loaded trained PyTorch model from {model_path}")
-            return
+            load_elapsed = (time.perf_counter() - t0) * 1000
+            print(f"[RETINA-XAI TIMING] DR PyTorch model loaded in {load_elapsed:.1f}ms from {model_path}", flush=True)
+            return _PYTORCH_MODEL
         except Exception as e:
-            print(f"[RETINA-XAI] Error loading PyTorch model: {e}")
+            print(f"[RETINA-XAI] Error loading PyTorch model: {e}", flush=True)
             
     _IS_DEMO = True
     _MODEL_INFO = "Demo Mode"
+    return None
 
 def is_demo_mode():
+    global _PYTORCH_MODEL, _IS_DEMO
+    if _PYTORCH_MODEL is None and _IS_DEMO:
+        initialize_model()
     return _IS_DEMO
 
 def get_model():
+    global _PYTORCH_MODEL
+    if _PYTORCH_MODEL is None:
+        initialize_model()
     return _PYTORCH_MODEL
 
 def predict_fundus_image(image_path):
     global _PYTORCH_MODEL, _IS_DEMO
     
-    if not _IS_DEMO and _PYTORCH_MODEL is not None:
+    model = get_model()
+    if not _IS_DEMO and model is not None:
         try:
             # Preprocess for PyTorch model
-            img = Image.open(image_path).convert("RGB").resize((224, 224), Image.BILINEAR)
-            arr = np.array(img, dtype=np.float32) / 255.0
+            with Image.open(image_path) as pil_img:
+                img_resized = pil_img.convert("RGB").resize((224, 224), Image.BILINEAR)
+                arr = np.array(img_resized, dtype=np.float32) / 255.0
+            
             mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
             std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
             arr = (arr - mean) / std
             
             input_tensor = torch.from_numpy(arr.transpose(2, 0, 1)).unsqueeze(0).float()
             
-            with torch.no_grad():
-                features = _PYTORCH_MODEL.forward_features(input_tensor)
-                pooled = _PYTORCH_MODEL.pool(features).flatten(1)
-                dr_logits = _PYTORCH_MODEL.dr_classifier(pooled)
-                lesion_logits = _PYTORCH_MODEL.lesion_detector(pooled)
+            model.eval()
+            with torch.inference_mode():
+                features = model.forward_features(input_tensor)
+                pooled = model.pool(features).flatten(1)
+                dr_logits = model.dr_classifier(pooled)
+                lesion_logits = model.lesion_detector(pooled)
                 
-                probs = F.softmax(dr_logits, dim=1).numpy()[0]
-                lesion_probs = torch.sigmoid(lesion_logits).numpy()[0]
+                probs = F.softmax(dr_logits, dim=1).cpu().numpy()[0]
+                lesion_probs = torch.sigmoid(lesion_logits).cpu().numpy()[0]
                 
             pred_class = int(np.argmax(probs))
             conf = float(probs[pred_class] * 100)
@@ -132,6 +156,10 @@ def predict_fundus_image(image_path):
             detected_lesions = [
                 LESION_NAMES[i] for i, p in enumerate(lesion_probs) if p > 0.40
             ]
+            
+            # Clean up intermediate tensors and memory
+            del input_tensor, features, pooled, dr_logits, lesion_logits, arr
+            gc.collect()
             
             return {
                 'class_id': pred_class,
@@ -145,7 +173,7 @@ def predict_fundus_image(image_path):
                 'model_name': 'IDRiD Trained PyTorch Model'
             }
         except Exception as e:
-            print(f"[RETINA-XAI] PyTorch inference error: {e}. Utilizing fallback demo inference.")
+            print(f"[RETINA-XAI] PyTorch inference error: {e}. Utilizing fallback demo inference.", flush=True)
             
     # Fallback Demo Inference
     img_bgr = cv2.imread(image_path)

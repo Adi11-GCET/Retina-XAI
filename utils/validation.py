@@ -82,6 +82,7 @@ def validate_retinal_image(image_input):
     # Standardize working resolution
     sample_size = (256, 256)
     small_bgr = cv2.resize(img_bgr, sample_size, interpolation=cv2.INTER_AREA)
+    del img_bgr  # Free high-resolution image array immediately
     gray = cv2.cvtColor(small_bgr, cv2.COLOR_BGR2GRAY)
 
     # 1. Active Field of View (FOV) Mask

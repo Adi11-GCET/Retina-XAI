@@ -1,9 +1,8 @@
-﻿Flask>=3.0.0
+--extra-index-url https://download.pytorch.org/whl/cpu
+Flask>=3.0.0
 Pillow>=10.0.0
 numpy>=1.24.0
-matplotlib>=3.7.0
-opencv-python>=4.8.0
+opencv-python-headless>=4.8.0
 werkzeug>=3.0.0
-# tensorflow>=2.15.0  # Optional: For production TensorFlow/EfficientNetB0 inference on supported Python environments
-gunicorn
-torch
+gunicorn>=21.2.0
+torch>=2.0.0

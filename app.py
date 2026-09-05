@@ -1,10 +1,20 @@
 import os
+import gc
+import time
 import random
 import string
 import shutil
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory
 from werkzeug.utils import secure_filename
+import torch
+
+# Enforce single-thread CPU execution to eliminate thread contention on 0.1 CPU
+torch.set_num_threads(1)
+try:
+    torch.set_num_interop_threads(1)
+except Exception:
+    pass
 
 from utils.database import (
     init_db, add_screening, update_screening_notes,
@@ -16,7 +26,7 @@ from services.prediction_service import (
     initialize_model, predict_fundus_image, is_demo_mode, get_model
 )
 from services.gradcam import generate_gradcam_heatmap
-from services.segmentation_service import predict_retinal_segmentation, initialize_segmentation_model
+from services.segmentation_service import predict_retinal_segmentation
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'retina-xai-rural-screening-key-2026'
@@ -31,17 +41,17 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(GENERATED_FOLDER, exist_ok=True)
 os.makedirs(SAMPLES_FOLDER, exist_ok=True)
 
-# Initialize database and model on startup
+# Initialize database on startup
 init_db()
-initialize_model()
-initialize_segmentation_model()
+# Note: Heavy models are loaded lazily on first access to keep startup RAM minimal (~100MB)
 
 @app.context_processor
 def inject_global_vars():
+    demo_active = is_demo_mode()
     return {
-        'is_demo': is_demo_mode(),
+        'is_demo': demo_active,
         'current_year': datetime.now().year,
-        'model_status': 'Trained IDRiD Deep Learning Model Active' if not is_demo_mode() else 'Demonstration Mode'
+        'model_status': 'Trained IDRiD Deep Learning Model Active' if not demo_active else 'Demonstration Mode'
     }
 
 @app.route('/favicon.ico')
@@ -58,6 +68,7 @@ def screening():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    t_total_start = time.perf_counter()
     try:
         sample_name = request.form.get('sample_name', '').strip()
         uploaded_file = request.files.get('image')
@@ -84,7 +95,11 @@ def predict():
             return jsonify({'success': False, 'error': 'Please select or upload a retinal image before analysis.'}), 400
 
         # Validate retinal image domain & quality (Reject random non-retinal photos)
+        t_val_start = time.perf_counter()
         validation = validate_retinal_image(target_img_path)
+        t_val_elapsed = (time.perf_counter() - t_val_start) * 1000
+        print(f"[RETINA-XAI TIMING] Validation: {t_val_elapsed:.1f}ms", flush=True)
+
         if not validation['is_valid_retina']:
             if os.path.exists(target_img_path):
                 try:
@@ -99,9 +114,13 @@ def predict():
             }), 400
 
         # Execute AI Screening Inference (PyTorch trained model)
+        t_dr_start = time.perf_counter()
         prediction_result = predict_fundus_image(target_img_path)
+        t_dr_elapsed = (time.perf_counter() - t_dr_start) * 1000
+        print(f"[RETINA-XAI TIMING] DR Inference: {t_dr_elapsed:.1f}ms", flush=True)
         
         # Generate Grad-CAM heatmaps & overlay (PyTorch gradients)
+        t_cam_start = time.perf_counter()
         rel_heatmap, rel_overlay = generate_gradcam_heatmap(
             target_img_path,
             GENERATED_FOLDER,
@@ -109,9 +128,14 @@ def predict():
             model=get_model(),
             is_demo=prediction_result['is_demo']
         )
+        t_cam_elapsed = (time.perf_counter() - t_cam_start) * 1000
+        print(f"[RETINA-XAI TIMING] Grad-CAM: {t_cam_elapsed:.1f}ms", flush=True)
 
         # Generate IDRiD U-Net retinal segmentation (lesions & optic disc)
+        t_seg_start = time.perf_counter()
         seg_result = predict_retinal_segmentation(target_img_path, GENERATED_FOLDER, patient_id)
+        t_seg_elapsed = (time.perf_counter() - t_seg_start) * 1000
+        print(f"[RETINA-XAI TIMING] Segmentation: {t_seg_elapsed:.1f}ms", flush=True)
 
         # Persist to SQLite
         add_screening(
@@ -132,6 +156,10 @@ def predict():
             detected_lesions=seg_result.get('detected_lesions', {})
         )
 
+        t_total_elapsed = (time.perf_counter() - t_total_start) * 1000
+        print(f"[RETINA-XAI TIMING] Total Screening Request: {t_total_elapsed:.1f}ms", flush=True)
+        gc.collect()
+
         return jsonify({
             'success': True,
             'patient_id': patient_id,
@@ -139,7 +167,7 @@ def predict():
         })
 
     except Exception as e:
-        print(f"[ERROR in /predict]: {e}")
+        print(f"[ERROR in /predict]: {e}", flush=True)
         return jsonify({'success': False, 'error': 'AI analysis is temporarily unavailable. Please try again.'}), 500
 
 @app.route('/result/<screening_id>')
@@ -162,7 +190,7 @@ def save_screening():
         update_screening_notes(screening_id, notes, referral_required)
         return jsonify({'success': True, 'message': 'Screening record updated successfully.'})
     except Exception as e:
-        print(f"[ERROR in /save-screening]: {e}")
+        print(f"[ERROR in /save-screening]: {e}", flush=True)
         return jsonify({'success': False, 'error': 'Unable to save screening. Please try again.'}), 500
 
 @app.route('/dashboard')
@@ -205,8 +233,9 @@ def server_error(e):
     return jsonify({'success': False, 'error': 'Internal system error. Please contact administrator.'}), 500
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     print("\n" + "="*60)
     print("  RETINA-XAI — Explainable AI for Retinal Screening")
-    print("  Server launching at: http://127.0.0.1:5000")
+    print(f"  Server launching at: http://0.0.0.0:{port}")
     print("="*60 + "\n")
-    app.run(host='127.0.0.1', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False)
