@@ -1,4 +1,4 @@
-﻿import sqlite3
+import sqlite3
 import os
 import json
 from datetime import datetime
@@ -21,6 +21,9 @@ def init_db():
             image_path TEXT NOT NULL,
             heatmap_path TEXT,
             overlay_path TEXT,
+            seg_overlay_path TEXT DEFAULT '',
+            seg_mask_path TEXT DEFAULT '',
+            detected_lesions TEXT DEFAULT '',
             prediction TEXT NOT NULL,
             class_id INTEGER NOT NULL,
             confidence REAL NOT NULL,
@@ -32,6 +35,17 @@ def init_db():
             created_at TEXT NOT NULL
         )
     """)
+    conn.commit()
+
+    # Dynamic migration check for existing databases
+    cursor.execute("PRAGMA table_info(screenings)")
+    existing_cols = [r['name'] for r in cursor.fetchall()]
+    if 'seg_overlay_path' not in existing_cols:
+        cursor.execute("ALTER TABLE screenings ADD COLUMN seg_overlay_path TEXT DEFAULT ''")
+    if 'seg_mask_path' not in existing_cols:
+        cursor.execute("ALTER TABLE screenings ADD COLUMN seg_mask_path TEXT DEFAULT ''")
+    if 'detected_lesions' not in existing_cols:
+        cursor.execute("ALTER TABLE screenings ADD COLUMN detected_lesions TEXT DEFAULT ''")
     conn.commit()
     
     cursor.execute("SELECT COUNT(*) as count FROM screenings")
@@ -128,18 +142,20 @@ def seed_demo_data(conn):
     """, demo_screenings)
     conn.commit()
 
-def add_screening(patient_id, image_path, heatmap_path, overlay_path, prediction, class_id, confidence, probabilities, risk_status, notes='', referral_required=0, is_demo=0):
+def add_screening(patient_id, image_path, heatmap_path, overlay_path, prediction, class_id, confidence, probabilities, risk_status, notes='', referral_required=0, is_demo=0, seg_overlay_path='', seg_mask_path='', detected_lesions=''):
     conn = get_db_connection()
     cursor = conn.cursor()
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     prob_str = json.dumps(probabilities) if isinstance(probabilities, list) else str(probabilities)
+    lesions_str = json.dumps(detected_lesions) if isinstance(detected_lesions, (list, dict)) else str(detected_lesions)
     cursor.execute("""
         INSERT INTO screenings (
             patient_id, image_path, heatmap_path, overlay_path,
             prediction, class_id, confidence, probabilities,
-            risk_status, notes, referral_required, is_demo, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (patient_id, image_path, heatmap_path, overlay_path, prediction, class_id, confidence, prob_str, risk_status, notes, referral_required, is_demo, now_str))
+            risk_status, notes, referral_required, is_demo,
+            seg_overlay_path, seg_mask_path, detected_lesions, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (patient_id, image_path, heatmap_path, overlay_path, prediction, class_id, confidence, prob_str, risk_status, notes, referral_required, is_demo, seg_overlay_path, seg_mask_path, lesions_str, now_str))
     conn.commit()
     screening_id = cursor.lastrowid
     conn.close()
@@ -164,6 +180,14 @@ def get_screening_by_id(screening_id):
             d['probabilities'] = json.loads(d['probabilities'])
         except Exception:
             pass
+        try:
+            if 'detected_lesions' in d and d['detected_lesions']:
+                if isinstance(d['detected_lesions'], str):
+                    d['detected_lesions'] = json.loads(d['detected_lesions'])
+            else:
+                d['detected_lesions'] = {}
+        except Exception:
+            d['detected_lesions'] = {}
         return d
     return None
 

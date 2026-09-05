@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Dashboard — RETINA-XAI{% endblock %}
 
@@ -9,7 +9,10 @@
       <h1 class="display-6 fw-bold text-dark mb-1" data-i18n="dash.title">Screening Dashboard</h1>
       <p class="text-muted small mb-0">Aggregate statistical overview of diabetic retinopathy screenings recorded in clinic database.</p>
     </div>
-    <div>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="speakDashboardSummary()">
+        <i class="bi bi-volume-up me-1 text-primary"></i> <span>Listen to Summary</span>
+      </button>
       <a href="{{ url_for('screening') }}" class="btn-primary-custom btn-sm">
         <i class="bi bi-plus-circle me-1"></i> <span data-i18n="nav.new_screening">New Screening</span>
       </a>
@@ -70,7 +73,7 @@
   <!-- Referral Alert Metric -->
   <div class="row g-4 mb-4">
     <div class="col-md-6">
-      <div class="custom-card p-3 border-0 shadow-sm d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #fff7ed, #ffffff); border-left: 4px solid #f97316 !important;">
+      <div class="custom-card p-3 border-0 shadow-sm d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, var(--warning-bg), var(--card-bg)); border-left: 4px solid #f97316 !important;">
         <div>
           <span class="text-warning fw-bold small text-uppercase">Triage Escalation</span>
           <h5 class="fw-bold text-dark mb-1">Referrals Recommended</h5>
@@ -84,7 +87,7 @@
     </div>
 
     <div class="col-md-6">
-      <div class="custom-card p-3 border-0 shadow-sm d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #ecfdf5, #ffffff); border-left: 4px solid #10b981 !important;">
+      <div class="custom-card p-3 border-0 shadow-sm d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, var(--success-bg), var(--card-bg)); border-left: 4px solid #10b981 !important;">
         <div>
           <span class="text-success fw-bold small text-uppercase">Primary Care Triage</span>
           <h5 class="fw-bold text-dark mb-1">Managed at Local Vision Centre</h5>
@@ -139,4 +142,18 @@
 
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  function speakDashboardSummary() {
+    const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'en';
+    let text = '';
+    if (lang === 'hi') {
+      text = "डैशबोर्ड सारांश: कुल {{ stats.total }} रेटिना जांच दर्ज की गई हैं। इनमें सामान्य: {{ stats.no_dr }}, माइल्ड: {{ stats.mild }}, मॉडरेट: {{ stats.moderate }}, सिवियर: {{ stats.severe }}, और प्रोलिफेरेटिव: {{ stats.proliferative }} मामले शामिल हैं। कुल रेफरल दर {{ stats.referral_rate }} प्रतिशत है।";
+    } else {
+      text = "Screening dashboard summary: A total of {{ stats.total }} clinical fundus screenings are recorded. Distribution: {{ stats.no_dr }} normal, {{ stats.mild }} mild, {{ stats.moderate }} moderate, {{ stats.severe }} severe, and {{ stats.proliferative }} proliferative cases. Overall specialist referral rate is {{ stats.referral_rate }} percent.";
+    }
+    if (window.retinaVoice && window.retinaVoice.speakText) {
+      window.retinaVoice.speakText(text, lang);
+    }
+  }
+</script>
 {% endblock %}

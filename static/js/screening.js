@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   const dropzone = document.getElementById('uploadDropzone');
   const fileInput = document.getElementById('retinaFileInput');
   const previewCard = document.getElementById('previewCard');
@@ -197,7 +197,15 @@
           }, 600);
         } else {
           processingOverlay.style.display = 'none';
-          showToast(result.error || 'AI analysis is temporarily unavailable. Please try again.', 'danger');
+          const errMsg = result.error || 'AI analysis is temporarily unavailable. Please try again.';
+          showToast(errMsg, 'danger');
+          if (result.is_invalid_image && window.retinaVoice && window.retinaVoice.speak) {
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'en';
+            const alertText = lang === 'hi'
+              ? 'अमान्य छवि। कृपया केवल एक मानक रेटिना फोटो अपलोड करें।'
+              : 'Invalid image. Please upload a standard retinal fundus photograph.';
+            window.retinaVoice.speak(alertText, lang);
+          }
         }
       } catch (err) {
         console.error(err);

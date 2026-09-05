@@ -1,4 +1,4 @@
-﻿import os
+import os
 import random
 import string
 import shutil
@@ -11,10 +11,12 @@ from utils.database import (
     get_screening_by_id, get_all_screenings, get_dashboard_statistics
 )
 from utils.preprocessing import allowed_file, MAX_FILE_SIZE
+from utils.validation import validate_retinal_image
 from services.prediction_service import (
     initialize_model, predict_fundus_image, is_demo_mode, get_model
 )
 from services.gradcam import generate_gradcam_heatmap
+from services.segmentation_service import predict_retinal_segmentation, initialize_segmentation_model
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'retina-xai-rural-screening-key-2026'
@@ -32,6 +34,7 @@ os.makedirs(SAMPLES_FOLDER, exist_ok=True)
 # Initialize database and model on startup
 init_db()
 initialize_model()
+initialize_segmentation_model()
 
 @app.context_processor
 def inject_global_vars():
@@ -80,6 +83,21 @@ def predict():
         else:
             return jsonify({'success': False, 'error': 'Please select or upload a retinal image before analysis.'}), 400
 
+        # Validate retinal image domain & quality (Reject random non-retinal photos)
+        validation = validate_retinal_image(target_img_path)
+        if not validation['is_valid_retina']:
+            if os.path.exists(target_img_path):
+                try:
+                    os.remove(target_img_path)
+                except Exception:
+                    pass
+            return jsonify({
+                'success': False,
+                'is_invalid_image': True,
+                'error': f"Invalid Image: {validation['reason']}. Please upload a standard retinal fundus photograph.",
+                'validation_metrics': validation.get('metrics', {})
+            }), 400
+
         # Execute AI Screening Inference (PyTorch trained model)
         prediction_result = predict_fundus_image(target_img_path)
         
@@ -91,6 +109,9 @@ def predict():
             model=get_model(),
             is_demo=prediction_result['is_demo']
         )
+
+        # Generate IDRiD U-Net retinal segmentation (lesions & optic disc)
+        seg_result = predict_retinal_segmentation(target_img_path, GENERATED_FOLDER, patient_id)
 
         # Persist to SQLite
         add_screening(
@@ -105,7 +126,10 @@ def predict():
             risk_status=prediction_result['clinical_profile']['summary'],
             notes='',
             referral_required=1 if prediction_result['clinical_profile']['referral_recommended'] else 0,
-            is_demo=1 if prediction_result['is_demo'] else 0
+            is_demo=1 if prediction_result['is_demo'] else 0,
+            seg_overlay_path=seg_result.get('seg_overlay_path', ''),
+            seg_mask_path=seg_result.get('seg_mask_path', ''),
+            detected_lesions=seg_result.get('detected_lesions', {})
         )
 
         return jsonify({

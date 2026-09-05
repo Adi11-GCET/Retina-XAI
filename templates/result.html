@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Screening Result: {{ screening.patient_id }} — RETINA-XAI{% endblock %}
 
@@ -22,13 +22,39 @@
       </div>
     </div>
 
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2">
       <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="window.print()">
         <i class="bi bi-printer me-1"></i> <span data-i18n="review.btn_print">Print / Export Report</span>
       </button>
       <a href="{{ url_for('screening') }}" class="btn btn-primary-custom btn-sm px-3">
         <i class="bi bi-plus-circle me-1"></i> <span data-i18n="nav.new_screening">New Screening</span>
       </a>
+    </div>
+  </div>
+
+  <!-- Auditory Accessibility / Voice Readout Panel (Text-to-Speech) -->
+  <div class="tts-panel-card shadow-sm mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+      <div class="d-flex align-items-center gap-2">
+        <div class="brand-icon-wrapper" style="width: 28px; height: 28px; font-size: 0.85rem;">
+          <i class="bi bi-volume-up-fill"></i>
+        </div>
+        <h6 class="fw-bold text-dark mb-0" data-i18n="voice.tts_heading">Auditory Accessibility (Text-to-Speech)</h6>
+      </div>
+      <span id="ttsStatusBadge" class="badge bg-primary text-white" style="display: none;">
+        <i class="bi bi-soundwave me-1"></i> <span data-i18n="voice.tts_reading">Reading aloud...</span>
+      </span>
+    </div>
+    <p class="text-muted small mb-3" data-i18n="voice.tts_help">
+      Listen to a voice summary of the AI screening results and clinical triage recommendation.
+    </p>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" id="ttsPlayBtn" class="tts-btn" onclick="playReportTts()">
+        <i class="bi bi-play-circle-fill"></i> <span data-i18n="voice.tts_read_report">Read Report Aloud</span>
+      </button>
+      <button type="button" id="ttsStopBtn" class="tts-stop-btn" style="display: none;" onclick="window.retinaVoice.stopSpeaking()">
+        <i class="bi bi-stop-circle-fill"></i> <span data-i18n="voice.tts_stop">Stop Speech</span>
+      </button>
     </div>
   </div>
 
@@ -47,7 +73,7 @@
         <!-- Circular Confidence Score -->
         <div class="circular-progress-wrapper mb-3">
           <svg width="140" height="140" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" stroke="#e2e8f0" stroke-width="8" fill="none" />
+            <circle cx="50" cy="50" r="42" stroke="var(--border-color)" stroke-width="8" fill="none" />
             <circle cx="50" cy="50" r="42" stroke="{% if screening.class_id == 0 %}#10b981{% elif screening.class_id == 1 %}#0284c7{% elif screening.class_id == 2 %}#f59e0b{% else %}#ef4444{% endif %}" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="{{ 264 - (264 * screening.confidence / 100) }}" stroke-linecap="round" fill="none" />
           </svg>
           <div class="circular-progress-text">
@@ -87,7 +113,7 @@
       </div>
 
       <!-- Clinical Triage Status Card -->
-      <div class="custom-card border-0 shadow-sm mb-4" style="background-color: {% if screening.referral_required or screening.class_id >= 2 %}#fff7ed{% else %}#f0fdf4{% endif %}; border-left: 5px solid {% if screening.referral_required or screening.class_id >= 2 %}#f97316{% else %}#10b981{% endif %} !important;">
+      <div class="custom-card border-0 shadow-sm mb-4" style="background-color: {% if screening.referral_required or screening.class_id >= 2 %}var(--warning-bg){% else %}var(--success-bg){% endif %}; border-left: 5px solid {% if screening.referral_required or screening.class_id >= 2 %}#f97316{% else %}#10b981{% endif %} !important;">
         <div class="d-flex align-items-center gap-2 mb-2">
           {% if screening.referral_required or screening.class_id >= 2 %}
           <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
@@ -120,7 +146,7 @@
             <h4 class="fw-bold text-dark mb-0" data-i18n="result.explain_heading">Why did the AI make this prediction?</h4>
           </div>
           
-          <div class="btn-group btn-group-sm" role="group">
+          <div class="btn-group btn-group-sm" role="group" aria-label="Grad-CAM visualizer modes">
             <button type="button" class="btn btn-outline-primary active" id="viewOverlayBtn" onclick="switchImageView('overlay')">
               <i class="bi bi-layers-half me-1"></i> <span data-i18n="result.tab_overlay">Overlay</span>
             </button>
@@ -139,7 +165,7 @@
         </div>
 
         <!-- Attention Legend -->
-        <div class="p-3 bg-light rounded mb-3">
+        <div class="p-3 bg-light rounded mb-3" style="background-color: var(--bg-main) !important; border: 1px solid var(--border-color);">
           <div class="d-flex justify-content-between text-muted small fw-bold">
             <span data-i18n="result.legend_low">Low Attention (Cold)</span>
             <span data-i18n="result.legend_med">Medium Attention</span>
@@ -169,6 +195,94 @@
 
       </div>
 
+      <!-- Retinal Lesion & Optic Disc Segmentation (IDRiD U-Net) -->
+      <div class="custom-card border-0 shadow-sm mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+          <div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle small fw-bold mb-1">
+              <i class="bi bi-bullseye me-1"></i> IDRiD PIXEL SEGMENTATION
+            </span>
+            <h4 class="fw-bold text-dark mb-0">Retinal Lesion & Anatomical Mapping</h4>
+            <div class="text-muted small">Multi-target segmentation trained on Indian Diabetic Retinopathy Image Dataset</div>
+          </div>
+          
+          <div class="btn-group btn-group-sm" role="group" aria-label="Segmentation visualizer modes">
+            <button type="button" class="btn btn-outline-primary active" id="viewSegOverlayBtn" onclick="switchSegView('overlay')">
+              <i class="bi bi-layers me-1"></i> <span>Overlay</span>
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="viewSegMaskBtn" onclick="switchSegView('mask')">
+              <i class="bi bi-grid-3x3 me-1"></i> <span>Binary Mask</span>
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="viewSegOriginalBtn" onclick="switchSegView('original')">
+              <i class="bi bi-image me-1"></i> <span>Original</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Segmentation Display Frame -->
+        <div class="gradcam-view-card mb-3">
+          {% if screening.seg_overlay_path %}
+          <img id="segRetinaDisplay" src="{{ url_for('static', filename=screening.seg_overlay_path.replace('static/', '')) }}" alt="Segmentation Visualization" class="gradcam-img-display shadow">
+          {% else %}
+          <img id="segRetinaDisplay" src="{{ url_for('static', filename=screening.overlay_path.replace('static/', '')) }}" alt="Retinal Visualization" class="gradcam-img-display shadow">
+          {% endif %}
+        </div>
+
+        <!-- Lesion Palette & Legend -->
+        <div class="p-3 bg-light rounded mb-3" style="background-color: var(--bg-main) !important; border: 1px solid var(--border-color);">
+          <div class="fw-bold text-dark small mb-2">Segmentation Structure Legend:</div>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="badge d-inline-flex align-items-center gap-1 px-2 py-1" style="background-color: rgba(0,255,255,0.15); color: #0891b2; border: 1px solid #06b6d4;">
+              <span style="width: 10px; height: 10px; background-color: #00FFFF; border-radius: 2px; display: inline-block;"></span> Optic Disc (OD)
+            </span>
+            <span class="badge d-inline-flex align-items-center gap-1 px-2 py-1" style="background-color: rgba(220,38,38,0.15); color: #dc2626; border: 1px solid #ef4444;">
+              <span style="width: 10px; height: 10px; background-color: #DC2626; border-radius: 2px; display: inline-block;"></span> Haemorrhages (HE)
+            </span>
+            <span class="badge d-inline-flex align-items-center gap-1 px-2 py-1" style="background-color: rgba(236,72,153,0.15); color: #db2777; border: 1px solid #ec4899;">
+              <span style="width: 10px; height: 10px; background-color: #EC4899; border-radius: 2px; display: inline-block;"></span> Microaneurysms (MA)
+            </span>
+            <span class="badge d-inline-flex align-items-center gap-1 px-2 py-1" style="background-color: rgba(234,179,8,0.15); color: #ca8a04; border: 1px solid #eab308;">
+              <span style="width: 10px; height: 10px; background-color: #EAB308; border-radius: 2px; display: inline-block;"></span> Hard Exudates (EX)
+            </span>
+            <span class="badge d-inline-flex align-items-center gap-1 px-2 py-1" style="background-color: rgba(16,185,129,0.15); color: #059669; border: 1px solid #10b981;">
+              <span style="width: 10px; height: 10px; background-color: #10B981; border-radius: 2px; display: inline-block;"></span> Soft Exudates (SE)
+            </span>
+          </div>
+        </div>
+
+        <!-- Detected Findings Summary -->
+        {% if screening.detected_lesions and screening.detected_lesions is mapping %}
+        <div class="mb-3">
+          <h6 class="fw-bold text-dark mb-2">Automated Morphological Findings:</h6>
+          <div class="row g-2">
+            {% for lesion_name, info in screening.detected_lesions.items() %}
+            <div class="col-6 col-md-4">
+              <div class="p-2 border rounded text-center" style="background-color: var(--card-bg);">
+                <div class="small fw-bold text-dark">{{ lesion_name }}</div>
+                {% if info.detected %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle mt-1">Detected ({{ info.pixels }} px)</span>
+                {% else %}
+                <span class="badge bg-secondary-subtle text-muted border border-secondary-subtle mt-1">None Detected</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Explicit Model Disclaimer Box -->
+        <div class="alert alert-info border-info-subtle d-flex align-items-start gap-2 mb-0 py-2 px-3" style="font-size: 0.82rem;">
+          <i class="bi bi-info-circle-fill text-info fs-5 flex-shrink-0"></i>
+          <div>
+            <strong>Clinical Notice & Limitations:</strong>
+            <span>
+              Segmentation boundaries are generated by an experimental deep convolutional network trained on 54 IDRiD expert ground-truth annotations. They provide morphological orientation and do not substitute for dilated slit-lamp biomicroscopy.
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Human Review & Clinical Notes Form -->
       <div class="custom-card border-0 shadow-sm mb-4">
         <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
@@ -180,9 +294,14 @@
           <input type="hidden" name="screening_id" value="{{ screening.id }}">
           
           <div class="mb-3">
-            <label class="form-label fw-bold text-dark small" data-i18n="review.notes_label">
-              Observations & Clinical Notes
-            </label>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <label class="form-label fw-bold text-dark small mb-0" data-i18n="review.notes_label">
+                Observations & Clinical Notes
+              </label>
+              <button type="button" id="dictateNotesBtn" class="btn-dictate-notes" title="Dictate notes using speech-to-text" onclick="toggleNotesDictation()">
+                <i class="bi bi-mic-fill"></i> <span data-i18n="voice.dictate_notes">Dictate Notes (Voice)</span>
+              </button>
+            </div>
             <textarea id="doctorNotes" name="notes" rows="3" class="form-control" placeholder="Enter clinical observations, retinal examination notes, or patient history..." data-i18n-ph="review.notes_placeholder">{{ screening.notes }}</textarea>
           </div>
 
@@ -227,6 +346,9 @@
   const originalPath = "{{ url_for('static', filename=screening.image_path.replace('static/', '')) }}";
   const heatmapPath = "{{ url_for('static', filename=screening.heatmap_path.replace('static/', '')) }}";
   const overlayPath = "{{ url_for('static', filename=screening.overlay_path.replace('static/', '')) }}";
+  
+  const segOverlayPath = "{{ url_for('static', filename=screening.seg_overlay_path.replace('static/', '')) if screening.seg_overlay_path else url_for('static', filename=screening.overlay_path.replace('static/', '')) }}";
+  const segMaskPath = "{{ url_for('static', filename=screening.seg_mask_path.replace('static/', '')) if screening.seg_mask_path else '' }}";
 
   function switchImageView(view) {
     const imgEl = document.getElementById('mainRetinaDisplay');
@@ -245,6 +367,52 @@
     } else {
       imgEl.src = overlayPath;
       btnOver.classList.add('active');
+    }
+  }
+
+  function switchSegView(view) {
+    const imgEl = document.getElementById('segRetinaDisplay');
+    const btnOver = document.getElementById('viewSegOverlayBtn');
+    const btnMask = document.getElementById('viewSegMaskBtn');
+    const btnOrig = document.getElementById('viewSegOriginalBtn');
+
+    [btnOver, btnMask, btnOrig].forEach(b => b && b.classList.remove('active'));
+
+    if (view === 'mask' && segMaskPath) {
+      imgEl.src = segMaskPath;
+      if (btnMask) btnMask.classList.add('active');
+    } else if (view === 'original') {
+      imgEl.src = originalPath;
+      if (btnOrig) btnOrig.classList.add('active');
+    } else {
+      imgEl.src = segOverlayPath;
+      if (btnOver) btnOver.classList.add('active');
+    }
+  }
+
+  // Text-to-Speech trigger
+  function playReportTts() {
+    const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'en';
+    const reportData = {
+      patientId: "{{ screening.patient_id }}",
+      classId: {{ screening.class_id }},
+      prediction: "{{ screening.prediction }}",
+      confidence: {{ screening.confidence }},
+      riskStatus: "{{ screening.risk_status|replace('"', '\\"')|replace("'", "\\'") }}",
+      referralRequired: {{ screening.referral_required }}
+    };
+    if (window.retinaVoice && window.retinaVoice.speakScreeningResult) {
+      window.retinaVoice.speakScreeningResult(reportData, lang);
+    }
+  }
+
+  // Voice dictation into doctor notes textarea
+  function toggleNotesDictation() {
+    const notesEl = document.getElementById('doctorNotes');
+    const btn = document.getElementById('dictateNotesBtn');
+    const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'en';
+    if (window.retinaVoice && window.retinaVoice.dictateDirectly) {
+      window.retinaVoice.dictateDirectly(notesEl, lang, btn);
     }
   }
 

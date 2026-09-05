@@ -1,4 +1,4 @@
-﻿const translations = {
+const translations = {
   en: {
     // Nav
     "nav.home": "Home",
@@ -134,6 +134,44 @@
     "hist.empty_title": "No screenings found",
     "hist.empty_desc": "No clinical screenings recorded matching your filter criteria.",
     
+    // DrishtiAI Header & Branding
+    "brand.tagline": "Explainable AI for Diabetic Retinopathy Screening in Rural India",
+    "brand.badge": "Rural DR Screening",
+    "nav.how_it_works": "How AI Works",
+    "nav.voice": "Voice",
+    "nav.theme": "Theme",
+    "nav.zoom": "Zoom",
+    "nav.demo_engine": "IDRiD AI Engine",
+    "badge.model_ready": "PyTorch IDRiD Model Active",
+    
+    // Voice Assistant
+    "voice.modal_title": "DrishtiAI Voice Assistant",
+    "voice.language": "Voice Language:",
+    "voice.status_ready": "Ready to listen",
+    "voice.status_listening": "Listening... Speak now",
+    "voice.status_processing": "Processing speech...",
+    "voice.status_error": "Microphone error or permission denied",
+    "voice.status_unsupported": "Speech recognition is not supported in this browser. You can still type notes or use text-to-speech.",
+    "voice.start_btn": "Start Speaking",
+    "voice.stop_btn": "Stop Listening",
+    "voice.recognized_label": "Recognized Clinical Transcript:",
+    "voice.copy_btn": "Copy Text",
+    "voice.insert_notes": "Insert into Clinical Notes",
+    "voice.clear_btn": "Clear",
+    "voice.dictate_notes": "Dictate Notes (Voice)",
+    "voice.tts_read_report": "Read Report Aloud",
+    "voice.tts_reading": "Reading aloud...",
+    "voice.tts_stop": "Stop Speech",
+    "voice.tts_heading": "Auditory Accessibility (Text-to-Speech)",
+    "voice.tts_help": "Listen to a voice summary of the AI screening results and clinical triage recommendation.",
+    
+    // Theme & Zoom Tooltips
+    "theme.to_dark": "Switch to Dark Theme",
+    "theme.to_light": "Switch to Light Theme",
+    "zoom.decrease": "Decrease text size (A-)",
+    "zoom.reset": "Default text size (A)",
+    "zoom.increase": "Increase text size (A+)",
+
     // Disclaimer
     "footer.disclaimer": "This system is a research/educational prototype and is not intended to provide a medical diagnosis. Results should be reviewed by a qualified healthcare professional."
   },
@@ -273,10 +311,50 @@
     "hist.empty_title": "कोई रिकॉर्ड नहीं मिला",
     "hist.empty_desc": "आपके फ़िल्टर से मेल खाती कोई स्क्रीनिंग नहीं मिली।",
     
+    // DrishtiAI Header & Branding
+    "brand.tagline": "भारत के ग्रामीण क्षेत्रों हेतु व्याख्यायोग्य डायबिटिक रेटिनोपैथी एआई जांच",
+    "brand.badge": "ग्रामीण डीआर जांच",
+    "nav.how_it_works": "एआई कार्यप्रणाली",
+    "nav.voice": "ध्वनि",
+    "nav.theme": "थीम",
+    "nav.zoom": "ज़ूम",
+    "nav.demo_engine": "आईडीआरआईडी एआई इंजन",
+    "badge.model_ready": "प्रशिक्षित मॉडल सक्रिय",
+    
+    // Voice Assistant
+    "voice.modal_title": "दृष्टि-एआई ध्वनि सहायक",
+    "voice.language": "ध्वनि भाषा:",
+    "voice.status_ready": "सुनने के लिए तैयार",
+    "voice.status_listening": "सुन रहा हूँ... अब बोलें",
+    "voice.status_processing": "आवाज़ का विश्लेषण हो रहा है...",
+    "voice.status_error": "माइक त्रुटि या अनुमति अस्वीकृत",
+    "voice.status_unsupported": "इस ब्राउज़र में स्पीच रिकग्निशन समर्थित नहीं है। आप सीधे नोट्स लिख सकते हैं।",
+    "voice.start_btn": "बोलना शुरू करें",
+    "voice.stop_btn": "सुनना बंद करें",
+    "voice.recognized_label": "पहचाना गया नैदानिक विवरण:",
+    "voice.copy_btn": "कॉपी करें",
+    "voice.insert_notes": "नैदानिक नोट्स में जोड़ें",
+    "voice.clear_btn": "साफ़ करें",
+    "voice.dictate_notes": "आवाज़ से नोट्स बोलें",
+    "voice.tts_read_report": "रिपोर्ट बोलकर सुनाएं",
+    "voice.tts_reading": "रिपोर्ट पढ़ी जा रही है...",
+    "voice.tts_stop": "आवाज़ रोकें",
+    "voice.tts_heading": "ध्वनि अभिगम्यता (टेक्स्ट-टू-स्पीच)",
+    "voice.tts_help": "एआई जांच परिणाम व रेफरल सलाह का संक्षिप्त ध्वनि सारांश सुनें।",
+    
+    // Theme & Zoom Tooltips
+    "theme.to_dark": "डार्क मोड सक्रिय करें",
+    "theme.to_light": "लाइट मोड सक्रिय करें",
+    "zoom.decrease": "आकार घटाएं (A-)",
+    "zoom.reset": "सामान्य आकार (A)",
+    "zoom.increase": "आकार बढ़ाएं (A+)",
+
     // Disclaimer
     "footer.disclaimer": "यह प्रणाली एक शोध/शैक्षणिक प्रोटोटाइप है और चिकित्सीय निदान प्रदान करने के लिए नहीं है। परिणामों की समीक्षा योग्य नेत्र रोग विशेषज्ञ द्वारा की जानी चाहिए।"
   }
 };
+
+window.translations = translations;
 
 let currentLang = localStorage.getItem('retina_lang') || 'en';
 
@@ -288,8 +366,10 @@ function setLanguage(lang) {
   document.querySelectorAll('.lang-btn').forEach(btn => {
     if (btn.dataset.lang === lang) {
       btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
     } else {
       btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
     }
   });
   
@@ -308,7 +388,21 @@ function setLanguage(lang) {
       el.setAttribute('placeholder', translations[lang][key]);
     }
   });
+
+  // Translate title/aria-labels with data-i18n-title
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (translations[lang] && translations[lang][key]) {
+      el.setAttribute('title', translations[lang][key]);
+      el.setAttribute('aria-label', translations[lang][key]);
+    }
+  });
+
+  window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
 }
+
+window.setLanguage = setLanguage;
+window.getCurrentLanguage = () => currentLang;
 
 document.addEventListener('DOMContentLoaded', () => {
   setLanguage(currentLang);

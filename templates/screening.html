@@ -1,17 +1,24 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}New Screening — RETINA-XAI{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-  <div class="text-center max-w-700 mx-auto mb-5">
+  <div class="text-center max-w-700 mx-auto mb-4">
     <span class="badge badge-pill-soft bg-primary-subtle text-primary border border-primary-subtle mb-2" data-i18n="badge.ai_assist">
       <i class="bi bi-cpu-fill"></i> AI-ASSISTED RETINAL SCREENING
     </span>
     <h1 class="display-6 fw-bold text-dark mb-2" data-i18n="screening.title">New Retinal Screening</h1>
-    <p class="text-muted" data-i18n="screening.subtitle">
+    <p class="text-muted mb-3" data-i18n="screening.subtitle">
       Upload a retinal fundus photograph to begin AI-assisted screening, or select a preloaded clinical reference case.
     </p>
+
+    <!-- Voice Guidance Button -->
+    <div class="d-inline-flex align-items-center gap-2">
+      <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1" onclick="speakScreeningGuidance()">
+        <i class="bi bi-volume-up me-1 text-primary"></i> <span id="guideBtnText">Listen to Audio Guide</span>
+      </button>
+    </div>
   </div>
 
   <div class="row justify-content-center">
@@ -24,7 +31,7 @@
             <i class="bi bi-collection-play-fill text-teal"></i>
             <span data-i18n="screening.sample_prompt">Or select a preloaded clinical sample case:</span>
           </label>
-          <div class="d-flex flex-wrap gap-2">
+          <div class="sample-pills-scroll">
             <button type="button" class="sample-pill-btn" data-sample="sample_no_dr.jpg" data-label="No DR (Normal)" data-src="{{ url_for('static', filename='samples/sample_no_dr.jpg') }}">
               <img src="{{ url_for('static', filename='samples/sample_no_dr.jpg') }}" alt="No DR" class="sample-thumb-mini">
               <span data-i18n="screening.sample_0">No DR (Normal)</span>
@@ -50,7 +57,7 @@
 
         <div class="position-relative my-4 text-center">
           <hr class="text-muted opacity-25">
-          <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small fw-semibold" data-i18n="screening.or">OR UPLOAD FUNDUS IMAGE</span>
+          <span class="position-absolute top-50 start-50 translate-middle px-3 text-muted small fw-semibold" style="background-color: var(--card-bg);" data-i18n="screening.or">OR UPLOAD FUNDUS IMAGE</span>
         </div>
 
         <!-- Form -->
@@ -59,7 +66,7 @@
           <input type="hidden" id="sampleInput" name="sample_name" value="">
 
           <!-- Drag and Drop Zone -->
-          <div id="uploadDropzone" class="upload-dropzone mb-4">
+          <div id="uploadDropzone" class="upload-dropzone mb-4" tabindex="0" role="button" aria-label="Upload retinal fundus photograph">
             <div class="upload-icon-circle">
               <i class="bi bi-camera"></i>
             </div>
@@ -99,7 +106,7 @@
           </div>
         </form>
 
-        <div class="mt-4 p-3 bg-light rounded text-center small text-muted">
+        <div class="mt-4 p-3 rounded text-center small text-muted" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
           <i class="bi bi-shield-check me-1 text-success"></i> 
           <strong>Privacy Guaranteed:</strong> No patient identifiers are stored. Images are processed locally on device/server.
         </div>
@@ -144,4 +151,18 @@
 
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/screening.js') }}"></script>
+<script>
+  function speakScreeningGuidance() {
+    const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'en';
+    let text = '';
+    if (lang === 'hi') {
+      text = "रेटिना-एक्सएआई जांच प्रणाली में आपका स्वागत है। जांच शुरू करने के लिए अपनी डिजिटल फंडस छवि अपलोड करें, या दिए गए पांच नैदानिक नमूनों में से कोई एक चुनें। इसके बाद 'रेटिना का विश्लेषण करें' बटन दबाएं।";
+    } else {
+      text = "Welcome to RETINA-XAI screening. To begin evaluation, drag and drop a retinal fundus photograph, or choose one of the preloaded clinical reference cases. Then click 'Analyze Retina' to run the AI model.";
+    }
+    if (window.retinaVoice && window.retinaVoice.speakText) {
+      window.retinaVoice.speakText(text, lang);
+    }
+  }
+</script>
 {% endblock %}

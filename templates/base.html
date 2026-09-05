@@ -1,10 +1,21 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <title>{% block title %}RETINA-XAI — Explainable AI for Retinal Screening{% endblock %}</title>
+
+  <!-- Prevent Theme & Zoom Flash -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('retina_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const savedZoom = localStorage.getItem('retina_zoom') || 'normal';
+      document.documentElement.setAttribute('data-zoom', savedZoom);
+    })();
+  </script>
+
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
@@ -16,19 +27,29 @@
 <body>
 
   <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top" aria-label="Main Clinical Navigation">
     <div class="container-fluid px-lg-4">
-      <a class="brand-logo" href="{{ url_for('index') }}">
+      
+      <!-- Brand & Project Identity -->
+      <a class="brand-logo" href="{{ url_for('index') }}" title="RETINA-XAI — DrishtiAI Clinical System">
         <div class="brand-icon-wrapper">
           <i class="bi bi-eye-fill"></i>
         </div>
-        <span>RETINA<span style="color: var(--teal);">-XAI</span></span>
+        <div class="d-flex flex-column">
+          <div class="d-flex align-items-center gap-2">
+            <span>RETINA<span style="color: var(--teal);">-XAI</span></span>
+            <span class="brand-badge d-none d-sm-inline-flex" data-i18n="brand.badge">Rural DR Screening</span>
+          </div>
+          <span class="text-muted" style="font-size: 0.68rem; font-weight: 500; margin-top: -3px;" data-i18n="brand.tagline">DrishtiAI Clinical Prototype</span>
+        </div>
       </a>
 
+      <!-- Mobile Hamburger Toggler -->
       <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
+      <!-- Main Navigation Links & Accessibility Controls -->
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
           <li class="nav-item">
@@ -44,15 +65,49 @@
             <a class="nav-link {% if active_page == 'history' %}active{% endif %}" href="{{ url_for('history') }}" data-i18n="nav.history">History</a>
           </li>
           <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('index') }}#howItWorks" data-i18n="nav.how_it_works">How AI Works</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link {% if active_page == 'about' %}active{% endif %}" href="{{ url_for('about') }}" data-i18n="nav.about">About</a>
           </li>
         </ul>
 
-        <div class="d-flex align-items-center gap-3">
-          <!-- Language Selector -->
-          <div class="lang-switcher">
-            <button type="button" class="lang-btn active" data-lang="en">EN</button>
-            <button type="button" class="lang-btn" data-lang="hi">हिन्दी</button>
+        <!-- Right Side: Healthcare Accessibility Toolbar -->
+        <div class="access-toolbar">
+          
+          <!-- AI Engine / Model Badge -->
+          {% if not is_demo %}
+          <span class="badge bg-success-subtle text-success border border-success-subtle d-none d-xl-inline-flex align-items-center gap-1 py-2 px-2" title="Indian Diabetic Retinopathy Image Dataset Model Active" data-i18n="badge.model_ready">
+            <i class="bi bi-cpu-fill"></i> IDRiD Engine
+          </span>
+          {% else %}
+          <span class="badge bg-warning-subtle text-warning border border-warning-subtle d-none d-xl-inline-flex align-items-center gap-1 py-2 px-2" data-i18n="nav.demo_engine">
+            <i class="bi bi-cpu"></i> Demo Engine
+          </span>
+          {% endif %}
+
+          <!-- Voice Assistant Button -->
+          <button type="button" id="navVoiceBtn" class="voice-nav-btn" data-bs-toggle="modal" data-bs-target="#voiceAssistantModal" aria-label="Open Voice Assistant" title="Open Voice Assistant">
+            <i class="bi bi-mic-fill"></i>
+            <span data-i18n="nav.voice">Voice</span>
+          </button>
+
+          <!-- Accessibility Zoom Scaling (A-, A, A+) -->
+          <div class="zoom-btn-group" role="group" aria-label="Text scaling controls">
+            <button type="button" class="zoom-btn" data-zoom="small" title="Decrease font size" aria-label="Decrease text size (A-)" data-i18n-title="zoom.decrease">A-</button>
+            <button type="button" class="zoom-btn active" data-zoom="normal" title="Default font size" aria-label="Default text size (A)" data-i18n-title="zoom.reset">A</button>
+            <button type="button" class="zoom-btn" data-zoom="large" title="Increase font size" aria-label="Increase text size (A+)" data-i18n-title="zoom.increase">A+</button>
+          </div>
+
+          <!-- Theme Toggle (Light / Dark) -->
+          <button type="button" id="themeToggle" class="theme-toggle-btn" aria-label="Toggle dark/light theme" title="Toggle dark/light theme" data-i18n-title="theme.to_dark">
+            <i class="bi bi-moon-stars-fill"></i>
+          </button>
+
+          <!-- Language Selector (English / Hindi) -->
+          <div class="lang-switcher" role="group" aria-label="Language selector">
+            <button type="button" class="lang-btn active" data-lang="en" aria-pressed="true">EN</button>
+            <button type="button" class="lang-btn" data-lang="hi" aria-pressed="false">हिन्दी</button>
           </div>
 
           <!-- New Screening CTA Button -->
@@ -60,16 +115,17 @@
             <i class="bi bi-plus-circle"></i>
             <span data-i18n="nav.new_screening">New Screening</span>
           </a>
+
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- Prototype Demo Indicator Banner -->
+  <!-- Prototype Demo Indicator Banner (If in demo mode) -->
   {% if is_demo %}
-  <div class="bg-amber-50 border-bottom border-warning-subtle py-1 px-3 text-center" style="background-color: #fffbeb; font-size: 0.84rem; color: #92400e;">
+  <div class="bg-amber-50 border-bottom border-warning-subtle py-1 px-3 text-center" style="background-color: var(--warning-bg); font-size: 0.84rem; color: #92400e;">
     <span class="badge bg-warning text-dark me-2">DEMO MODE</span>
-    <span data-i18n="badge.demo_mode">Demonstration AI Mode Active — Real EfficientNetB0 integration ready for <code>model/dr_model.keras</code>.</span>
+    <span data-i18n="badge.demo_mode">Demonstration AI Mode Active — Real PyTorch EfficientNet integration available at <code>model/retina_idrid_model.pth</code>.</span>
   </div>
   {% endif %}
 
@@ -77,6 +133,115 @@
   <main>
     {% block content %}{% endblock %}
   </main>
+
+  <!-- Global Voice Assistant Modal (Web Speech API) -->
+  <div class="modal fade" id="voiceAssistantModal" tabindex="-1" aria-labelledby="voiceAssistantModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content voice-modal-content">
+        
+        <div class="modal-header voice-modal-header d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <div class="brand-icon-wrapper" style="width: 32px; height: 32px; font-size: 1rem;">
+              <i class="bi bi-mic-fill"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold mb-0" id="voiceAssistantModalLabel" data-i18n="voice.modal_title">
+                DrishtiAI Voice Assistant
+              </h5>
+              <span class="text-muted small" style="font-size: 0.75rem;">Hands-Free Retinal Triage Support</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-4">
+
+          <!-- Unsupported browser notice -->
+          <div id="voiceUnsupportedAlert" class="alert alert-warning border-warning-subtle d-none mb-3 py-2 px-3 small">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            <span data-i18n="voice.status_unsupported">
+              Speech recognition is not supported in this browser. You can still type notes or use text-to-speech.
+            </span>
+          </div>
+
+          <!-- Language Selector for Voice -->
+          <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
+            <label for="voiceModalLangSelect" class="small fw-semibold mb-0" data-i18n="voice.language">
+              Voice Language:
+            </label>
+            <select id="voiceModalLangSelect" class="form-select form-select-sm w-auto border-0 fw-semibold">
+              <option value="en">English (India/US)</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+            </select>
+          </div>
+
+          <!-- Central Microphone Button & State Visualizer -->
+          <div class="voice-mic-container text-center mb-3">
+            <button type="button" id="voiceModalMicBtn" class="voice-mic-btn state-ready" aria-label="Microphone Control" title="Click to speak">
+              <i class="bi bi-mic-fill"></i>
+            </button>
+
+            <!-- Audio Waveform -->
+            <div id="audioWaveform" class="audio-waveform">
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+              <div class="waveform-bar"></div>
+            </div>
+
+            <!-- Live Status Text -->
+            <div id="voiceModalStatusText" class="fw-semibold mt-2 small text-muted" data-i18n="voice.status_ready">
+              Ready to listen
+            </div>
+          </div>
+
+          <!-- Live Transcript Output -->
+          <div class="mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <label class="small fw-bold text-muted mb-0" data-i18n="voice.recognized_label">
+                Recognized Clinical Transcript:
+              </label>
+              <button type="button" id="voiceClearBtn" class="btn btn-link btn-sm text-muted p-0 text-decoration-none" data-i18n="voice.clear_btn">
+                Clear
+              </button>
+            </div>
+            <div id="voiceTranscriptBox" class="voice-transcript-box" role="region" aria-live="polite">
+              <span class="text-muted fst-italic">Speak clearly into your microphone...</span>
+            </div>
+          </div>
+
+          <!-- Quick Command Guide Chips -->
+          <div class="mb-3">
+            <div class="small text-muted mb-1 fw-semibold">Quick Voice Commands:</div>
+            <div class="d-flex flex-wrap gap-1">
+              <span class="voice-cmd-chip" onclick="window.location.href='/screening'">"Screening"</span>
+              <span class="voice-cmd-chip" onclick="window.location.href='/dashboard'">"Dashboard"</span>
+              <span class="voice-cmd-chip" onclick="window.location.href='/history'">"History"</span>
+              <span class="voice-cmd-chip" onclick="window.retinaVoice.toggleTheme()">"Theme"</span>
+              <span class="voice-cmd-chip" onclick="window.setLanguage('hi')">"हिन्दी"</span>
+              <span class="voice-cmd-chip" onclick="window.setLanguage('en')">"English"</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex gap-2 justify-content-end">
+            <button type="button" id="voiceCopyBtn" class="btn btn-outline-secondary btn-sm px-3">
+              <i class="bi bi-clipboard me-1"></i> <span data-i18n="voice.copy_btn">Copy Text</span>
+            </button>
+            <button type="button" id="voiceInsertBtn" class="btn btn-outline-primary btn-sm px-3">
+              <i class="bi bi-pencil-square me-1"></i> <span data-i18n="voice.insert_notes">Insert into Notes</span>
+            </button>
+            <button type="button" id="voiceModalToggleBtn" class="btn btn-primary-custom px-4">
+              <i class="bi bi-mic-fill me-1"></i> <span data-i18n="voice.start_btn">Start Speaking</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Alert Container -->
   <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;"></div>
@@ -99,7 +264,7 @@
         </div>
         <div class="col-md-6 text-center text-md-end">
           <div class="small text-muted mb-1">
-            <span>Powered by EfficientNetB0 & Grad-CAM</span> &bull; <span>Flask & SQLite</span>
+            <span>Powered by PyTorch EfficientNetB0 & Grad-CAM</span> &bull; <span>Flask & SQLite</span>
           </div>
           <div class="small text-secondary">
             &copy; 2026 RETINA-XAI Prototype. Designed for underserved clinical settings.
@@ -113,10 +278,10 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- Custom JS -->
+  <!-- Custom JS Modules -->
   <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>
-

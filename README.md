@@ -1,240 +1,158 @@
-# RETINA-XAI – Explainable AI for Diabetic Retinopathy Screening
+# RETINA-XAI: Explainable AI for Diabetic Retinopathy Screening in Rural India
 
-RETINA-XAI is a prototype web application that explores how AI can assist in the early screening of diabetic retinopathy, especially in rural and underserved areas.
+**RETINA-XAI** (Clinical Interface: **DrishtiAI**) is a robust, bilingual AI-assisted healthcare platform developed for diabetic retinopathy screening and triage in rural and semi-urban vision centers.
 
-The project allows a user to upload a retinal fundus image, analyze it, view the predicted severity level, and see a visual explanation using Grad-CAM. It also includes a simple review system where healthcare workers can add notes and record whether a specialist referral is required.
+$$\text{Retinal Image} \longrightarrow \text{Domain Validation} \longrightarrow \text{DR Severity Classification} \longrightarrow \text{Grad-CAM XAI} \longrightarrow \text{IDRiD Lesion Segmentation} \longrightarrow \text{Bilingual Voice Triage} \longrightarrow \text{Audit Log}$$
 
-> **Note:** This is an educational and demonstration project, not a medical diagnostic system.
-
----
-
-## Features
-
-### 🩺 5-Level Diabetic Retinopathy Classification
-
-The application uses five severity levels:
-
-* **0 – No Diabetic Retinopathy**
-* **1 – Mild**
-* **2 – Moderate**
-* **3 – Severe**
-* **4 – Proliferative**
-
-The prediction is displayed along with the probability of each class.
-
-### 🔍 Explainable AI with Grad-CAM
-
-The project uses Grad-CAM to create a heatmap showing the areas of the retinal image that received more attention from the model.
-
-Users can switch between:
-
-* Original Image
-* Heatmap
-* Grad-CAM Overlay
-
-This makes the prediction easier to understand instead of showing only a final class label.
-
-### 📷 Sample Retina Images
-
-Some sample cases are included in the application so that the complete workflow can be tested without uploading an image every time.
-
-### 👨‍⚕️ Human Review
-
-After analysis, the user can:
-
-* Add observations or notes
-* Select whether referral is required
-* Save the screening report
-
-This keeps a human reviewer involved instead of treating the AI prediction as a final diagnosis.
-
-### 📊 History & Dashboard
-
-The application stores previous screening reports in a SQLite database.
-
-The dashboard provides simple visualizations such as:
-
-* Distribution of screening results
-* Confidence trends
-* Number of cases in each severity class
-
-### 🌐 English & Hindi
-
-The interface supports both English and Hindi to make the prototype more suitable for users in different regions of India.
+The platform adheres to strict clinical governance: AI acts as an **assistive screening and triage tool**, providing explainable attention heatmaps and anatomical lesion segmentations to empower frontline health workers, without ever replacing a qualified ophthalmologist.
 
 ---
 
-## Technology Used
+## 1. Key System Capabilities
 
-### Frontend
-
-* HTML
-* CSS
-* JavaScript
-* Bootstrap 5
-* Chart.js
-
-### Backend
-
-* Python
-* Flask
-
-### AI & Image Processing
-
-* TensorFlow / Keras
-* EfficientNetB0
-* Grad-CAM
-* OpenCV
-* Pillow
-* NumPy
-* Matplotlib
-
-### Database
-
-* SQLite
-
----
-
-## Project Workflow
-
-The basic workflow of the application is:
-
-**Upload Retina Image → Preprocess Image → AI Prediction → Show Severity → Generate Grad-CAM → Human Review → Save Report**
-
-The application is designed so that AI assists the screening process while the final medical decision remains with a qualified healthcare professional.
+- **Diabetic Retinopathy Classification (5 Severity Grades)**:
+  - Grade 0: No DR (Routine annual check-up)
+  - Grade 1: Mild DR (Non-proliferative, microaneurysms only)
+  - Grade 2: Moderate DR (Hemorrhages, hard exudates)
+  - Grade 3: Severe DR (4-2-1 international clinical rule)
+  - Grade 4: Proliferative DR (Neovascularization, high retinal detachment risk)
+- **Multi-Feature Retinal Validation Guardrail**:
+  - Automatically rejects non-retinal uploads (human faces, landscapes, pets, documents, blurry screenshots) with HTTP 400 and bilingual voice alerts.
+  - Non-retinal photos **never** receive a false "No DR" diagnosis.
+- **Explainable AI (Grad-CAM)**:
+  - Backpropagation gradient heatmaps revealing convolutional focus areas.
+  - Interactive tabs: **Overlay**, **Heatmap**, and **Original Retina**.
+- **Pixel-Level Lesion & Optic Disc Segmentation (IDRiD PyTorch U-Net)**:
+  - Trained directly on the Indian Diabetic Retinopathy Image Dataset (IDRiD).
+  - Segments 5 anatomical and pathological targets:
+    - **Optic Disc (OD)** — Cyan
+    - **Haemorrhages (HE)** — Crimson
+    - **Microaneurysms (MA)** — Magenta
+    - **Hard Exudates (EX)** — Gold
+    - **Soft Exudates (SE)** — Mint Green
+  - Interactive tabs: **Overlay**, **Binary Mask**, and **Original Fundus**.
+- **Bilingual English + हिन्दी Voice Assistant**:
+  - Text-to-speech audio reading of screening verdicts and triage advice.
+  - Voice-to-text dictation for doctor clinical notes.
+  - Voice-driven patient history search.
+- **Clinical Accessibility**:
+  - Dark / Light mode toggle.
+  - High-contrast font zoom controls (A- / A / A+).
+  - Preloaded clinical reference cases across all 5 DR grades.
 
 ---
 
-## Running the Project
+## 2. IDRiD Dataset & Segmentation Model
 
-### 1. Clone the repository
+### Dataset Specifications & Strict Evaluation Split
+The model was trained and evaluated on the Indian Diabetic Retinopathy Image Dataset (**IDRiD** - Part A: Segmentation):
+- **Total Images**: Exactly 81 fundus photographs (`4288 × 2848` RGB JPEGs).
+- **Split Protocol**:
+  - **Training Subset**: 44 images (`IDRiD_01` to `IDRiD_54` subset) used for model gradient updates.
+  - **Validation Subset**: 10 images (`IDRiD_04`, `06`, `13`, `18`, `20`, `33`, `45`, `49`, `50`, `53`) used **solely** for model selection and checkpoint saving.
+  - **Held-Out Test Set**: 27 images (`IDRiD_55` to `IDRiD_81`) **completely untouched** during training and model selection.
+- **Ground-Truth Masks**: Binary TIFF masks (`{0, 1}`) across 5 folders:
+  1. `1. Microaneurysms/`
+  2. `2. Haemorrhages/`
+  3. `3. Hard Exudates/`
+  4. `4. Soft Exudates/`
+  5. `5. Optic Disc/`
+- **Clinical Honesty Note**: The IDRiD segmentation dataset contains **NO diabetic retinopathy severity labels**. It provides ground-truth pixel masks for anatomical structures and lesions, not disease grades. The DR classification model (`model/retina_idrid_model.pth`) and the segmentation model (`model/retinal_segmentation_model.pth`) operate as complementary, specialized components.
+
+### Model Architecture: RetinalUNet
+- **Framework**: PyTorch (`torch 2.14.0+cpu`).
+- **Structure**: 4-level encoder-decoder with skip connections and double convolutions (64 $\to$ 128 $\to$ 256 $\to$ 512 $\to$ 256 $\to$ 128 $\to$ 64 $\to$ 32 channels).
+- **Input Resolution**: $256 \times 256 \times 3$.
+- **Output Channels**: 5 sigmoid activation channels (multi-label segmentation).
+- **Loss Function**: Combined BCE with Soft Dice Loss ($\mathcal{L} = 0.4 \cdot \text{BCE} + 0.6 \cdot \text{Dice}$).
+- **Optimization**: AdamW ($\text{lr} = 10^{-3}$, weight decay $= 10^{-4}$) with Cosine Annealing scheduler over 15 epochs.
+- **Checkpoint Selection**: Selected at **Epoch 13** based strictly on the lowest validation loss ($0.6817$) on the 10-image validation subset.
+
+### Empirical Held-Out Test Metrics (Evaluated ONCE on Unseen IDRiD_55 to IDRiD_81)
+Evaluated strictly once on the 27 held-out test images after training was complete (recorded in `model/segmentation_metadata.json`):
+
+| Structure / Lesion | Test Dice Score | Test IoU (Jaccard) | Precision | Recall | Clinical Performance Summary |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Optic Disc (OD)** | **0.7820** | **0.6421** | 0.6682 | **0.9425** | Strong anatomical boundary delineation and localization |
+| **Hard Exudates (EX)** | **0.1461** | **0.0788** | 0.1125 | 0.2082 | Coarse detection of lipid deposits |
+| **Soft Exudates (SE)** | **0.1236** | **0.0659** | 0.1203 | 0.1270 | Sparse detection (cotton-wool spots) |
+| **Haemorrhages (HE)** | **0.0016** | **0.0008** | 0.0025 | 0.0012 | Very weak recall on fine vascular flame lesions |
+| **Microaneurysms (MA)** | **0.0000** | **0.0000** | 0.0000 | 0.0000 | Sub-pixel bottleneck: downsampling loss at $256 \times 256$ |
+| **Overall Test Mean** | **0.2107** | **0.1575** | — | — | Solid on optic disc; weak on micro-lesions |
+
+> **IMPORTANT CLINICAL NOTICE ON SEGMENTATION PERFORMANCE:**
+> Segmentation performance is **weak** for Microaneurysms (Dice 0.0000), Haemorrhages (Dice 0.0016), and Soft Exudates (Dice 0.1236). This model **does NOT provide clinical-grade segmentation** and must not be used for diagnostic lesion quantification. It serves solely as an exploratory decision-support demonstration for optic disc orientation and general exudate clustering.
+
+---
+
+## 3. Heuristic Retinal-Image Validation Guardrail
+
+To filter out obviously non-retinal uploads (e.g., human portraits, animals, outdoor landscapes, documents, screenshots, and blank files) before they enter the deep learning pipeline, `utils/validation.py` enforces a heuristic pre-screening guardrail:
+
+1. **Active Circular Field of View (FOV)**: Checks whether an illuminated fundus aperture occupies $\ge 15\%$ of the frame.
+2. **Hemoglobin Chromatic Profile**: Retinal tissue strongly reflects red and absorbs blue. Evaluates $\frac{\text{Mean}(B)}{\text{Mean}(R)} < 0.70$ and $\text{Mean}(R) \ge 35$.
+3. **Warm Retinal Hue Dominance**: In OpenCV HSV space, retinal hues cluster in $[0, 28] \cup [155, 180]$. Checks for $\ge 60\%$ warm pixel concentration.
+4. **Microvascular Green-Channel Contrast**: Computes standard deviation in the green channel ($\text{std}(G) \ge 6.0$) to reject solid blocks, flat graphics, and overexposed scans.
+
+When an upload fails this heuristic guardrail, the server returns **HTTP 400** with `is_invalid_image: True`, displays an error toast, and vocalizes a bilingual voice reminder asking for an authentic fundus photograph.
+
+---
+
+## 4. Technology Stack
+
+- **Backend**: Python 3, Flask web microframework, SQLite3.
+- **Deep Learning**: PyTorch (`torch`, `torchvision`), EfficientNet, U-Net.
+- **Computer Vision**: OpenCV (`cv2`), Pillow (`PIL`), NumPy.
+- **Frontend**: HTML5, Vanilla CSS3 (custom clinical theme tokens), JavaScript (ES6+), Bootstrap 5.
+- **Speech APIs**: Native browser Web Speech API (`SpeechSynthesis` and `SpeechRecognition`).
+
+---
+
+## 5. Installation & Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Adi11-GCET/retina-xai.git
+   cd retina-xai
+   ```
+
+2. **Install Python dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Start the Flask server**:
+   ```bash
+   python app.py
+   ```
+
+4. **Access the application**:
+   Open your browser and navigate to:
+   ```
+   http://127.0.0.1:5000
+   ```
+
+---
+
+## 6. Verification & Testing
+
+Run the automated test suite covering all pages, API endpoints, the multi-feature retinal validator, and segmentation outputs:
 
 ```bash
-git clone <your-repository-url>
-cd retina-xai
+python -m unittest test_app.py
 ```
 
-### 2. Install dependencies
-
-```bash
-pip install -r requirements.txt
+Expected output:
 ```
-
-### 3. Run the Flask application
-
-```bash
-python app.py
-```
-
-### 4. Open in browser
-
-```text
-http://127.0.0.1:5000
+Ran 15 tests in 0.945s
+OK
 ```
 
 ---
 
-## Using the Application
+## 7. Limitations & Clinical Governance
 
-1. Open the **Screening** page.
-2. Select one of the available sample cases or upload a retinal fundus image.
-3. Click **Analyze Retina**.
-4. View the predicted diabetic retinopathy severity.
-5. Check the class probabilities and confidence score.
-6. Open the **Original**, **Heatmap**, and **Overlay** views.
-7. Add notes and select the referral status.
-8. Save the screening report.
-9. Visit **History** or **Dashboard** to view previous results.
-
----
-
-## AI Model
-
-The application is designed to work with an EfficientNetB0-based TensorFlow/Keras model.
-
-The expected input size is:
-
-```text
-224 × 224 × 3
-```
-
-The model is expected to produce five output classes corresponding to the five diabetic retinopathy severity levels.
-
-If a trained model is available, it can be placed at:
-
-```text
-model/dr_model.keras
-```
-
-The application can then use the model for inference.
-
-### Demo Mode
-
-For demonstration purposes, the project can also run without the trained model. In this case, the application uses its demo image-processing logic so that the complete website workflow can still be tested.
-
----
-
-## Dataset References
-
-The project is based on commonly used diabetic retinopathy image datasets, including:
-
-* APTOS 2019 Blindness Detection
-* EyePACS
-* IDRiD
-* Messidor / Messidor-2
-
-These datasets are useful references for developing and evaluating diabetic retinopathy detection systems.
-
----
-
-## Why Explainability?
-
-A normal AI model may provide a prediction without clearly showing why it made that prediction.
-
-Grad-CAM provides a visual indication of the image regions that contributed more to the model's prediction. This can make the system easier to inspect and can help a healthcare professional understand the model's output.
-
-However, the heatmap should **not** be treated as proof that a specific retinal lesion is present.
-
----
-
-## Limitations
-
-This project is currently a prototype and has several limitations:
-
-* It is not a certified medical device.
-* AI predictions should not be used as a final diagnosis.
-* Model performance depends on the quality and diversity of the training data.
-* Grad-CAM is an explanation of model attention, not a medical diagnosis.
-* A properly trained and validated model is required for real-world clinical use.
-* Further testing with clinical datasets and medical professionals would be required before practical deployment.
-
----
-
-## Future Improvements
-
-Some possible future improvements are:
-
-* Train and evaluate the model on a larger dataset
-* Improve Grad-CAM explanations
-* Add more Indian regional languages
-* Add offline support for low-resource areas
-* Improve image quality checks
-* Add doctor/ophthalmologist review features
-* Explore deployment on low-cost devices
-* Perform proper clinical validation
-
----
-
-## Disclaimer
-
-**RETINA-XAI is an educational and research prototype created for demonstration purposes. It is not intended to diagnose, treat, or replace a qualified medical professional. Any real medical decision should be made by an appropriately qualified healthcare professional.**
-
----
-
-## Author
-
-**ADITIYA GUPTA**
-
-B.Tech CSE (Data Science) Student
-
-Interested in AI, Data Science and Web Development.
+> **IMPORTANT CLINICAL NOTICE:**
+> - **Not a Medical Device**: This platform is an educational and research prototype for clinical decision support. It is **NOT certified as a primary diagnostic device** by CDSCO, FDA, or CE.
+> - **High-Resolution Lesion Challenge**: The current U-Net operates at $256 \times 256$ resolution. Tiny microaneurysms (often only 2–5 pixels wide) require patch-based attention networks ($512 \times 512$ or $1024 \times 1024$) with Focal Tversky loss for reliable segmentation.
+> - **Human Review Required**: All AI triage recommendations, Grad-CAM attention heatmaps, and lesion segmentations must be reviewed and countersigned by a licensed medical officer or certified ophthalmologist.

@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Screening History — RETINA-XAI{% endblock %}
 
@@ -20,11 +20,14 @@
 
   <!-- Search & Filter Controls -->
   <div class="custom-card p-3 border-0 shadow-sm mb-4">
-    <form method="GET" action="{{ url_for('history') }}" class="row g-2 align-items-center">
+    <form method="GET" action="{{ url_for('history') }}" id="historyFilterForm" class="row g-2 align-items-center">
       <div class="col-md-6">
         <div class="input-group">
-          <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-          <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0 ps-0" placeholder="Search by Patient ID or clinical notes..." data-i18n-ph="hist.search_ph">
+          <span class="input-group-text border-end-0 text-muted" style="background-color: var(--input-bg);"><i class="bi bi-search"></i></span>
+          <input type="text" id="historySearchInput" name="q" value="{{ search_query }}" class="form-control border-start-0 border-end-0 ps-0" placeholder="Search by Patient ID or clinical notes..." data-i18n-ph="hist.search_ph">
+          <button type="button" class="btn btn-outline-secondary border-start-0" id="voiceSearchBtn" title="Dictate search with microphone" onclick="dictateHistorySearch()">
+            <i class="bi bi-mic-fill text-primary"></i>
+          </button>
         </div>
       </div>
 
@@ -135,4 +138,17 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function dictateHistorySearch() {
+    const inputEl = document.getElementById('historySearchInput');
+    const btn = document.getElementById('voiceSearchBtn');
+    const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'en';
+    if (window.retinaVoice && window.retinaVoice.dictateDirectly) {
+      window.retinaVoice.dictateDirectly(inputEl, lang, btn);
+    }
+  }
+</script>
 {% endblock %}

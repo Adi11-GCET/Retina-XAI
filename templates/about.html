@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}About — RETINA-XAI{% endblock %}
 
@@ -22,7 +22,7 @@
         <h5 class="fw-bold text-dark mb-2">Prototype Limitations & Research Disclaimer</h5>
         <ul class="mb-0 text-secondary small ps-3">
           <li><strong>Educational & Research Prototype:</strong> This software is a college/hackathon demonstration prototype and is <strong>NOT a certified medical diagnostic device</strong>.</li>
-          <li><strong>Demographic Generalizability:</strong> Public benchmark datasets (e.g. EyePACS, APTOS) primarily reflect specific populations and may not fully capture rural Indian demographic, nutritional, or cataract variations.</li>
+          <li><strong>Demographic Generalizability:</strong> Public benchmark datasets (e.g. EyePACS, APTOS, IDRiD) reflect specific clinical cohorts and may not fully capture rural Indian demographic, nutritional, or mature cataract variations.</li>
           <li><strong>Fundus Hardware Variations:</strong> Image quality, illumination, and field-of-view vary widely across low-cost portable non-mydriatic cameras versus clinical tabletop systems.</li>
           <li><strong>Human-in-the-Loop Imperative:</strong> All automated predictions and Grad-CAM saliency maps MUST be evaluated by a qualified healthcare professional or ophthalmologist prior to any clinical decision.</li>
         </ul>
@@ -44,13 +44,13 @@
         <p class="text-muted small mb-3">
           Chronically high blood glucose damages tiny retinal blood vessels, causing them to swell, leak fluid (exudates), hemorrhage, or become occluded. In advanced stages (proliferative DR), abnormal fragile new blood vessels proliferate on the retina, risking vitreous hemorrhage and tractional retinal detachment.
         </p>
-        <div class="p-3 bg-light rounded small">
-          <strong>The 5 ICDR Severity Stages:</strong>
+        <div class="p-3 rounded small" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
+          <strong class="text-dark">The 5 ICDR Severity Stages:</strong>
           <ol class="mb-0 mt-2 ps-3 text-muted">
             <li><strong>0 — No DR:</strong> No retinal abnormalities detectable.</li>
             <li><strong>1 — Mild DR:</strong> Microaneurysms only.</li>
             <li><strong>2 — Moderate DR:</strong> Microaneurysms, blot hemorrhages, hard exudates.</li>
-            <li><strong>3 — Severe DR:</strong> >20 intraretinal hemorrhages in each of 4 quadrants, venous beading.</li>
+            <li><strong>3 — Severe DR:</strong> &gt;20 intraretinal hemorrhages in each of 4 quadrants, venous beading.</li>
             <li><strong>4 — Proliferative DR:</strong> Neovascularization, vitreous/preretinal hemorrhage.</li>
           </ol>
         </div>
@@ -70,7 +70,7 @@
         <p class="text-muted small mb-3">
           <strong>Gradient-weighted Class Activation Mapping (Grad-CAM)</strong> computes the gradients of the target class score with respect to the final convolutional feature maps. This reveals the specific spatial regions—such as exudates or hemorrhages—that the network utilized to reach its classification.
         </p>
-        <div class="p-3 bg-teal-subtle rounded small" style="background-color: var(--teal-light);">
+        <div class="p-3 rounded small" style="background-color: var(--teal-light); border: 1px solid var(--border-color);">
           <strong class="text-dark">Clinical Benefits of Grad-CAM:</strong>
           <ul class="mb-0 mt-2 ps-3 text-muted">
             <li><strong>Artifact Detection:</strong> Alerts clinicians if the AI erroneously focused on lens dust or eyelash reflections rather than true retinal lesions.</li>
@@ -90,14 +90,14 @@
           <i class="bi bi-stack text-primary me-2"></i>Technology Stack
         </h5>
         <div class="d-flex flex-wrap gap-2">
-          <span class="badge bg-light text-dark border px-3 py-2">EfficientNetB0</span>
-          <span class="badge bg-light text-dark border px-3 py-2">TensorFlow / Keras</span>
-          <span class="badge bg-light text-dark border px-3 py-2">Grad-CAM Saliency</span>
-          <span class="badge bg-light text-dark border px-3 py-2">Python 3.14</span>
-          <span class="badge bg-light text-dark border px-3 py-2">Flask Microframework</span>
-          <span class="badge bg-light text-dark border px-3 py-2">OpenCV & NumPy</span>
-          <span class="badge bg-light text-dark border px-3 py-2">SQLite Embedded DB</span>
-          <span class="badge bg-light text-dark border px-3 py-2">Bootstrap 5 & Chart.js</span>
+          <span class="badge bg-light text-muted border px-3 py-2">PyTorch & Torchvision</span>
+          <span class="badge bg-light text-muted border px-3 py-2">EfficientNetB0 Backbone</span>
+          <span class="badge bg-light text-muted border px-3 py-2">Grad-CAM Gradient Saliency</span>
+          <span class="badge bg-light text-muted border px-3 py-2">Web Speech API (STT & TTS)</span>
+          <span class="badge bg-light text-muted border px-3 py-2">Flask Microframework</span>
+          <span class="badge bg-light text-muted border px-3 py-2">OpenCV & NumPy</span>
+          <span class="badge bg-light text-muted border px-3 py-2">SQLite Clinical Audit DB</span>
+          <span class="badge bg-light text-muted border px-3 py-2">Bootstrap 5 & Chart.js</span>
         </div>
       </div>
     </div>
@@ -109,13 +109,13 @@
         </h5>
         <ul class="list-unstyled mb-0 small">
           <li class="mb-2">
+            <strong>IDRiD (Indian Diabetic Retinopathy Image Dataset):</strong> Primary training cohort featuring expert ophthalmologist annotations for Indian rural clinics.
+          </li>
+          <li class="mb-2">
             <strong>APTOS 2019 Blindness Detection:</strong> 3,662 fundus images captured under clinical conditions in rural and semi-urban Indian clinics (Aravind Eye Hospital).
           </li>
           <li class="mb-2">
             <strong>EyePACS:</strong> 35,126 high-resolution images across diverse cameras from California diabetic screening programs.
-          </li>
-          <li class="mb-2">
-            <strong>IDRiD:</strong> Indian Diabetic Retinopathy Image Dataset featuring pixel-level lesion annotations for microaneurysms, hemorrhages, and exudates.
           </li>
           <li>
             <strong>Messidor & Messidor-2:</strong> Standardized European fundus dataset for validation and grading protocol comparison.
@@ -133,49 +133,49 @@
 
     <div class="row g-3">
       <div class="col-md-4 col-sm-6">
-        <div class="p-3 border rounded h-100 bg-white">
+        <div class="p-3 border rounded h-100" style="background-color: var(--bg-main); border-color: var(--border-color) !important;">
           <span class="badge bg-success mb-2">Phase 1 &bull; Active</span>
-          <h6 class="fw-bold mb-1">Working AI + Grad-CAM MVP</h6>
-          <p class="text-muted small mb-0">5-class EfficientNetB0 pipeline, interactive Grad-CAM heatmap reveal, human review notes, SQLite database.</p>
+          <h6 class="fw-bold mb-1 text-dark">Working AI + Grad-CAM MVP</h6>
+          <p class="text-muted small mb-0">5-class PyTorch model, interactive Grad-CAM heatmap reveal, human review notes, SQLite database.</p>
         </div>
       </div>
 
       <div class="col-md-4 col-sm-6">
-        <div class="p-3 border rounded h-100 bg-white">
-          <span class="badge bg-secondary mb-2">Phase 2</span>
-          <h6 class="fw-bold mb-1">Advanced XAI (Grad-CAM++ & SHAP)</h6>
-          <p class="text-muted small mb-0">Multi-resolution Grad-CAM++, Score-CAM, and SHAP kernel explanations for fine-grained microvascular localization.</p>
+        <div class="p-3 border rounded h-100" style="background-color: var(--bg-main); border-color: var(--border-color) !important;">
+          <span class="badge bg-primary mb-2">Phase 2 &bull; Active</span>
+          <h6 class="fw-bold mb-1 text-dark">Voice & Accessibility Suite</h6>
+          <p class="text-muted small mb-0">Bilingual English + Hindi Web Speech assistant, TTS report readout, UI text zoom, and dark/light theme.</p>
         </div>
       </div>
 
       <div class="col-md-4 col-sm-6">
-        <div class="p-3 border rounded h-100 bg-white">
+        <div class="p-3 border rounded h-100" style="background-color: var(--bg-main); border-color: var(--border-color) !important;">
           <span class="badge bg-secondary mb-2">Phase 3</span>
-          <h6 class="fw-bold mb-1">Regional Language Expansion</h6>
-          <p class="text-muted small mb-0">Extending bilingual English/Hindi interface to Bengali (বাংলা), Tamil (தமிழ்), Telugu (తెలుగు), and Marathi.</p>
+          <h6 class="fw-bold mb-1 text-dark">Regional Language Expansion</h6>
+          <p class="text-muted small mb-0">Extending bilingual interface to Bengali (বাংলা), Tamil (தமிழ்), Telugu (తెలుగు), and Marathi.</p>
         </div>
       </div>
 
       <div class="col-md-4 col-sm-6">
-        <div class="p-3 border rounded h-100 bg-white">
+        <div class="p-3 border rounded h-100" style="background-color: var(--bg-main); border-color: var(--border-color) !important;">
           <span class="badge bg-secondary mb-2">Phase 4</span>
-          <h6 class="fw-bold mb-1">Offline Edge Inference</h6>
-          <p class="text-muted small mb-0">Quantized ONNX / TensorFlow Lite model execution on low-cost single-board computers (Raspberry Pi 5) without internet.</p>
+          <h6 class="fw-bold mb-1 text-dark">Offline Edge Inference</h6>
+          <p class="text-muted small mb-0">Quantized ONNX / PyTorch Mobile model execution on low-cost single-board computers (Raspberry Pi 5) without internet.</p>
         </div>
       </div>
 
       <div class="col-md-4 col-sm-6">
-        <div class="p-3 border rounded h-100 bg-white">
+        <div class="p-3 border rounded h-100" style="background-color: var(--bg-main); border-color: var(--border-color) !important;">
           <span class="badge bg-secondary mb-2">Phase 5</span>
-          <h6 class="fw-bold mb-1">Rural PHC Tele-Integration</h6>
+          <h6 class="fw-bold mb-1 text-dark">Rural PHC Tele-Integration</h6>
           <p class="text-muted small mb-0">Integration with national digital health portals (ABDM / Ayushman Bharat) and community health worker (ASHA) workflows.</p>
         </div>
       </div>
 
       <div class="col-md-4 col-sm-6">
-        <div class="p-3 border rounded h-100 bg-white">
+        <div class="p-3 border rounded h-100" style="background-color: var(--bg-main); border-color: var(--border-color) !important;">
           <span class="badge bg-secondary mb-2">Phase 6</span>
-          <h6 class="fw-bold mb-1">Remote Ophthalmologist Portal</h6>
+          <h6 class="fw-bold mb-1 text-dark">Remote Specialist Tele-Queue</h6>
           <p class="text-muted small mb-0">Bidirectional cloud referral queue allowing hospital retina specialists to verify flagged cases and issue e-prescriptions.</p>
         </div>
       </div>
