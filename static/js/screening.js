@@ -163,6 +163,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
       setStage(0);
 
+      // Continuous status cycler for Render free tier / CPU execution
+      const dynamicStatus = document.getElementById('dynamicStatusNotice');
+      const statusCycleMessages = [
+        "Analyzing retinal image structure & illumination...",
+        "Evaluating microaneurysms and vascular caliber...",
+        "Executing PyTorch neural inference (IDRiD weights)...",
+        "Computing Grad-CAM saliency heatmaps...",
+        "Synthesizing pixel lesion segmentation...",
+        "Structuring clinical findings and referral advisory...",
+        "Finalizing diagnostic report..."
+      ];
+      let msgIndex = 0;
+      if (dynamicStatus) {
+        dynamicStatus.innerHTML = `<i class="bi bi-cpu me-1"></i> ${statusCycleMessages[0]}`;
+      }
+      const statusInterval = setInterval(() => {
+        msgIndex = (msgIndex + 1) % statusCycleMessages.length;
+        if (dynamicStatus) {
+          dynamicStatus.innerHTML = `<i class="bi bi-cpu me-1"></i> ${statusCycleMessages[msgIndex]}`;
+        }
+      }, 2800);
+
+      let currentStage = 0;
+      const stageTimer = setInterval(() => {
+        if (currentStage < 3) {
+          currentStage++;
+          setStage(currentStage);
+        }
+      }, 2400);
+
       const formData = new FormData();
       if (selectedFile) {
         formData.append('image', selectedFile);
@@ -171,12 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        // Stage animations while fetch runs
-        const t1 = setTimeout(() => setStage(1), 500);
-        const t2 = setTimeout(() => setStage(2), 1100);
-        const t3 = setTimeout(() => setStage(3), 1800);
-        const t4 = setTimeout(() => setStage(4), 2400);
-
         const response = await fetch('/predict', {
           method: 'POST',
           body: formData
@@ -184,33 +208,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const result = await response.json();
 
-        // Clear timers if finished sooner
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-        clearTimeout(t4);
+        clearInterval(statusInterval);
+        clearInterval(stageTimer);
 
         if (result.success && result.redirect_url) {
           setStage(4);
+          if (dynamicStatus) {
+            dynamicStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i> Analysis complete! Loading clinical report...';
+          }
           setTimeout(() => {
             window.location.href = result.redirect_url;
-          }, 600);
+          }, 450);
         } else {
           processingOverlay.style.display = 'none';
           const errMsg = result.error || 'AI analysis is temporarily unavailable. Please try again.';
           showToast(errMsg, 'danger');
-          if (result.is_invalid_image && window.retinaVoice && window.retinaVoice.speak) {
+          if (result.is_invalid_image && window.retinaVoice && window.retinaVoice.speakText) {
             const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'en';
             const alertText = lang === 'hi'
               ? 'अमान्य छवि। कृपया केवल एक मानक रेटिना फोटो अपलोड करें।'
               : 'Invalid image. Please upload a standard retinal fundus photograph.';
-            window.retinaVoice.speak(alertText, lang);
+            window.retinaVoice.speakText(alertText, lang);
           }
         }
       } catch (err) {
         console.error(err);
+        clearInterval(statusInterval);
+        clearInterval(stageTimer);
         processingOverlay.style.display = 'none';
-        showToast('Unable to complete AI analysis. Please check image and try again.', 'danger');
+        showToast('Unable to complete AI analysis. The server took too long to respond. Please check image and try again.', 'danger');
       }
     });
   }

@@ -24,7 +24,7 @@ threads = 1
 worker_class = "sync"
 
 # Timeouts (Expanded for 0.1 CPU inference)
-timeout = 120
+timeout = 180
 graceful_timeout = 30
 keepalive = 5
 

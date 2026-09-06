@@ -19,12 +19,15 @@
     <div class="d-flex align-items-start gap-3">
       <i class="bi bi-shield-exclamation text-warning fs-2 flex-shrink-0"></i>
       <div>
-        <h5 class="fw-bold text-dark mb-2">Prototype Limitations & Research Disclaimer</h5>
+        <h5 class="fw-bold text-dark mb-2">Prototype Limitations &amp; Clinical Disclaimer</h5>
+        <div class="alert alert-light border-0 py-2 px-3 mb-3 fw-semibold text-primary" style="background-color: rgba(15, 76, 129, 0.08); font-size: 0.9rem;">
+          <i class="bi bi-info-circle-fill me-1"></i> DrishtiAI is an AI-assisted screening prototype and is not a replacement for diagnosis by a qualified healthcare professional.
+        </div>
         <ul class="mb-0 text-secondary small ps-3">
-          <li><strong>Educational & Research Prototype:</strong> This software is a college/hackathon demonstration prototype and is <strong>NOT a certified medical diagnostic device</strong>.</li>
+          <li><strong>Educational &amp; Research Prototype:</strong> This software is a clinical triage demonstration prototype and is <strong>NOT an FDA/CE-certified diagnostic medical device</strong>.</li>
           <li><strong>Demographic Generalizability:</strong> Public benchmark datasets (e.g. EyePACS, APTOS, IDRiD) reflect specific clinical cohorts and may not fully capture rural Indian demographic, nutritional, or mature cataract variations.</li>
           <li><strong>Fundus Hardware Variations:</strong> Image quality, illumination, and field-of-view vary widely across low-cost portable non-mydriatic cameras versus clinical tabletop systems.</li>
-          <li><strong>Human-in-the-Loop Imperative:</strong> All automated predictions and Grad-CAM saliency maps MUST be evaluated by a qualified healthcare professional or ophthalmologist prior to any clinical decision.</li>
+          <li><strong>Human-in-the-Loop Imperative:</strong> All automated predictions, segmentation maps, and Grad-CAM saliency heatmaps MUST be evaluated by a qualified ophthalmologist prior to any clinical decision.</li>
         </ul>
       </div>
     </div>
@@ -90,8 +93,8 @@
           <i class="bi bi-stack text-primary me-2"></i>Technology Stack
         </h5>
         <div class="d-flex flex-wrap gap-2">
-          <span class="badge bg-light text-muted border px-3 py-2">PyTorch & Torchvision</span>
-          <span class="badge bg-light text-muted border px-3 py-2">EfficientNetB0 Backbone</span>
+          <span class="badge bg-light text-muted border px-3 py-2">PyTorch &amp; Torchvision</span>
+          <span class="badge bg-light text-muted border px-3 py-2">Custom PyTorch CNN Architecture</span>
           <span class="badge bg-light text-muted border px-3 py-2">Grad-CAM Gradient Saliency</span>
           <span class="badge bg-light text-muted border px-3 py-2">Web Speech API (STT & TTS)</span>
           <span class="badge bg-light text-muted border px-3 py-2">Flask Microframework</span>

@@ -107,8 +107,8 @@
         </form>
 
         <div class="mt-4 p-3 rounded text-center small text-muted" style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
-          <i class="bi bi-shield-check me-1 text-success"></i> 
-          <strong>Privacy Guaranteed:</strong> No patient identifiers are stored. Images are processed locally on device/server.
+          <i class="bi bi-shield-lock me-1 text-primary"></i> 
+          <strong>Prototype Environment:</strong> Demonstration data only. Do not submit protected health information or sensitive patient identifiers.
         </div>
 
       </div>
@@ -134,7 +134,7 @@
       </div>
       <div id="stage-3" class="stage-item">
         <i class="bi bi-circle stage-icon"></i>
-        <span data-i18n="stage.3">Running EfficientNetB0 screening model</span>
+        <span data-i18n="stage.3">Running Custom PyTorch CNN screening model</span>
       </div>
       <div id="stage-4" class="stage-item">
         <i class="bi bi-circle stage-icon"></i>
@@ -144,6 +144,11 @@
         <i class="bi bi-circle stage-icon"></i>
         <span data-i18n="stage.5">Preparing clinical screening report</span>
       </div>
+    </div>
+
+    <!-- Dynamic Status Notice for Render / CPU processing -->
+    <div id="dynamicStatusNotice" class="text-primary small fw-semibold mt-3 text-center" style="min-height: 22px;">
+      <i class="bi bi-cpu me-1"></i> Running local PyTorch inference...
     </div>
   </div>
 </div>

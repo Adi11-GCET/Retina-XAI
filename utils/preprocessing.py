@@ -1,4 +1,4 @@
-﻿import cv2
+import cv2
 import numpy as np
 from PIL import Image
 import os
@@ -50,7 +50,7 @@ def enhance_fundus_green_channel(img_rgb):
 
 def preprocess_image_for_model(image_path, target_size=(224, 224)):
     """
-    Prepares image for EfficientNetB0 (224x224x3).
+    Prepares image for PyTorch CNN screening model (224x224x3).
     Returns normalized numpy array (1, 224, 224, 3) and cropped RGB image.
     """
     # Read image using OpenCV

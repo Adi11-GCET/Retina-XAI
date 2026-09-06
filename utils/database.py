@@ -48,11 +48,38 @@ def init_db():
         cursor.execute("ALTER TABLE screenings ADD COLUMN detected_lesions TEXT DEFAULT ''")
     conn.commit()
     
+    # Initialize users table for authentication & audit
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            full_name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            age INTEGER,
+            gender TEXT,
+            role TEXT DEFAULT 'Clinician / Screener',
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    seed_demo_user(conn)
+
     cursor.execute("SELECT COUNT(*) as count FROM screenings")
     row = cursor.fetchone()
     if row['count'] == 0:
         seed_demo_data(conn)
     conn.close()
+
+def seed_demo_user(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM users WHERE email = 'demo@drishtiai.org'")
+    row = cursor.fetchone()
+    if row['count'] == 0:
+        cursor.execute("""
+            INSERT INTO users (full_name, email, age, gender, role, is_active, created_at)
+            VALUES (?, ?, ?, ?, ?, 1, ?)
+        """, ('Dr. Ananya Sharma', 'demo@drishtiai.org', 34, 'Female', 'Consultant Ophthalmologist', '2026-08-01 09:00:00'))
+        conn.commit()
 
 def seed_demo_data(conn):
     demo_screenings = [
@@ -242,3 +269,37 @@ def get_dashboard_statistics():
         'referral_rate': round((referrals / total * 100) if total > 0 else 0, 1),
         'timeline': [dict(r) for r in timeline_rows]
     }
+
+def create_or_update_user(full_name, email, age=None, gender=None, role='Clinician / Screener'):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    email_clean = email.strip().lower()
+    cursor.execute("SELECT id FROM users WHERE email = ?", (email_clean,))
+    existing = cursor.fetchone()
+    if existing:
+        cursor.execute("""
+            UPDATE users SET full_name = ?, age = COALESCE(?, age), gender = COALESCE(?, gender), role = COALESCE(?, role)
+            WHERE id = ?
+        """, (full_name.strip(), age, gender, role, existing['id']))
+        user_id = existing['id']
+    else:
+        cursor.execute("""
+            INSERT INTO users (full_name, email, age, gender, role, is_active, created_at)
+            VALUES (?, ?, ?, ?, ?, 1, ?)
+        """, (full_name.strip(), email_clean, age, gender, role, now_str))
+        user_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return user_id
+
+def get_user_by_email(email):
+    if not email:
+        return None
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE email = ?", (email.strip().lower(),))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+

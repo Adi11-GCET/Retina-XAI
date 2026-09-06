@@ -8,6 +8,13 @@ class RetinaXAITestCase(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
+        with self.app.session_transaction() as sess:
+            sess['user'] = {
+                'name': 'Dr. Ananya Sharma',
+                'email': 'demo@drishtiai.org',
+                'role': 'Consultant Ophthalmologist',
+                'is_guest': False
+            }
 
     def test_home_page(self):
         response = self.app.get('/')
@@ -37,7 +44,7 @@ class RetinaXAITestCase(unittest.TestCase):
         response = self.app.get('/about')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Prototype Limitations', response.data)
-        self.assertIn(b'EfficientNetB0', response.data)
+        self.assertIn(b'Custom PyTorch CNN', response.data)
 
     def test_api_dashboard(self):
         response = self.app.get('/api/dashboard')
@@ -163,6 +170,96 @@ class RetinaXAITestCase(unittest.TestCase):
         finally:
             if os.path.exists(tf_path):
                 os.remove(tf_path)
+
+    def test_unauthenticated_protected_route_redirect(self):
+        """Ensure unauthenticated users accessing protected routes are redirected to login."""
+        fresh_client = app.test_client()
+        response = fresh_client.get('/screening')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login', response.headers.get('Location', ''))
+
+    def test_login_page_renders_drishtiai(self):
+        """Ensure login page renders DrishtiAI branding and guest option."""
+        fresh_client = app.test_client()
+        response = fresh_client.get('/login')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Drishti', response.data)
+        self.assertIn(b'Secure Retinal Screening', response.data)
+        self.assertIn(b'Explore Portal as Guest', response.data)
+
+    def test_login_existing_user_redirects_to_otp(self):
+        """Ensure logging in with existing user redirects to OTP verification."""
+        fresh_client = app.test_client()
+        response = fresh_client.post('/login', data={'email': 'demo@drishtiai.org'})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/otp', response.headers.get('Location', ''))
+
+    def test_login_new_user_redirects_to_register(self):
+        """Ensure logging in with an unknown email redirects to clinician registration."""
+        fresh_client = app.test_client()
+        response = fresh_client.post('/login', data={'email': 'dr.new@hospital.org'})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/register', response.headers.get('Location', ''))
+
+    def test_register_clinician(self):
+        """Ensure registering a clinician persists the user and moves to OTP."""
+        fresh_client = app.test_client()
+        response = fresh_client.post('/register', data={
+            'full_name': 'Dr. Test Clinician',
+            'email': 'test.clinician@ruralhealth.org',
+            'age': '40',
+            'gender': 'Male'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/otp', response.headers.get('Location', ''))
+
+    def test_otp_verification_success(self):
+        """Ensure submitting correct Demo OTP 652070 logs in user and grants dashboard access."""
+        fresh_client = app.test_client()
+        with fresh_client.session_transaction() as sess:
+            sess['pending_email'] = 'demo@drishtiai.org'
+            sess['pending_name'] = 'Dr. Ananya Sharma'
+
+        response = fresh_client.post('/otp', data={'otp': '652070'})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/dashboard', response.headers.get('Location', ''))
+
+        # Verify session is populated
+        with fresh_client.session_transaction() as sess:
+            self.assertIn('user', sess)
+            self.assertEqual(sess['user']['email'], 'demo@drishtiai.org')
+            self.assertFalse(sess['user']['is_guest'])
+
+    def test_otp_verification_invalid_code(self):
+        """Ensure invalid OTP code returns an error message."""
+        fresh_client = app.test_client()
+        response = fresh_client.post('/otp', data={'otp': '000000'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Invalid security OTP code', response.data)
+
+    def test_guest_access_bypass(self):
+        """Ensure 1-click guest access bypasses authentication and sets Guest Screener session."""
+        fresh_client = app.test_client()
+        response = fresh_client.get('/guest')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/dashboard', response.headers.get('Location', ''))
+
+        with fresh_client.session_transaction() as sess:
+            self.assertIn('user', sess)
+            self.assertEqual(sess['user']['name'], 'Guest Screener')
+            self.assertTrue(sess['user']['is_guest'])
+
+    def test_logout(self):
+        """Ensure logging out clears the session and returns to login."""
+        client = app.test_client()
+        with client.session_transaction() as sess:
+            sess['user'] = {'name': 'Test User', 'email': 'test@test.com', 'is_guest': False}
+        response = client.get('/logout')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login', response.headers.get('Location', ''))
+
+        with client.session_transaction() as sess:
+            self.assertNotIn('user', sess)
 
 if __name__ == '__main__':
     unittest.main()

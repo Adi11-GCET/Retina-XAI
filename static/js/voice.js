@@ -21,6 +21,7 @@
 
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-bs-theme', theme);
     localStorage.setItem(THEME_KEY, theme);
 
     const toggleBtn = document.getElementById('themeToggle');

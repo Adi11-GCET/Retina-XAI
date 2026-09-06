@@ -37,7 +37,7 @@ const translations = {
     "step1.title": "Upload",
     "step1.desc": "Fundus image capture at local clinic",
     "step2.title": "Analyze",
-    "step2.desc": "Preprocessing & EfficientNet screening",
+    "step2.desc": "Preprocessing & Deep CNN screening",
     "step3.title": "Predict",
     "step3.desc": "5-class severity & confidence score",
     "step4.title": "Explain",
@@ -45,6 +45,9 @@ const translations = {
     "step5.title": "Review",
     "step5.desc": "Healthcare worker notes & referral triage",
     
+    // Footer & Disclaimer
+    "footer.disclaimer": "DrishtiAI is an AI-assisted screening prototype and is not a replacement for diagnosis by a qualified healthcare professional.",
+
     // Rural Section
     "rural.heading": "Designed with Rural Healthcare in Mind",
     "rural.subheading": "Empowering primary health centres (PHCs) and vision centres without requiring on-site retina specialists",
@@ -74,7 +77,7 @@ const translations = {
     "processing.heading": "Analyzing retinal image...",
     "stage.1": "Image uploaded and validated",
     "stage.2": "Preprocessing fundus & CLAHE enhancement",
-    "stage.3": "Running EfficientNetB0 screening model",
+    "stage.3": "Running Custom PyTorch CNN screening model",
     "stage.4": "Generating Grad-CAM visual explanation",
     "stage.5": "Preparing clinical screening report",
     
@@ -247,11 +250,14 @@ const translations = {
     "screening.sample_4": "प्रोलिफेरेटिव डीआर",
     "screening.btn_analyze": "रेटिना का विश्लेषण करें",
     
+    // Footer & Disclaimer
+    "footer.disclaimer": "दृष्टि-एआई एक एआई-सहायक स्क्रीनिंग प्रोटोटाइप है और यह किसी योग्य स्वास्थ्य पेशेवर द्वारा निदान का विकल्प नहीं है।",
+
     // Processing Overlay
     "processing.heading": "रेटिना छवि का विश्लेषण जारी है...",
     "stage.1": "छवि अपलोड और सत्यापित",
     "stage.2": "फंडस प्री-प्रोसेसिंग और ग्रीन कंट्रास्ट संवर्धन",
-    "stage.3": "एफिशिएंटनेट-बी0 स्क्रीनिंग मॉडल निष्पादन",
+    "stage.3": "कस्टम पायटॉर्च सीएनएन स्क्रीनिंग मॉडल निष्पादन",
     "stage.4": "ग्रैड-कैम दृश्य व्याख्या तैयार हो रही है",
     "stage.5": "स्क्रीनिंग रिपोर्ट अंतिम रूप में तैयार",
     

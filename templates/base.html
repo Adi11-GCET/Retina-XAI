@@ -11,6 +11,7 @@
     (function() {
       const savedTheme = localStorage.getItem('retina_theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
+      document.documentElement.setAttribute('data-bs-theme', savedTheme);
       const savedZoom = localStorage.getItem('retina_zoom') || 'normal';
       document.documentElement.setAttribute('data-zoom', savedZoom);
     })();
@@ -110,6 +111,27 @@
             <button type="button" class="lang-btn" data-lang="hi" aria-pressed="false">हिन्दी</button>
           </div>
 
+          <!-- User Authentication Status -->
+          {% if current_user %}
+          <div class="user-profile-badge d-flex align-items-center gap-2 px-2 py-1 rounded" style="background: var(--card-bg); border: 1px solid var(--border-color);" title="{{ current_user.name }} ({{ current_user.role }})">
+            <i class="bi bi-person-circle text-primary"></i>
+            <span class="small fw-semibold user-name-display text-truncate" style="max-width: 120px;">
+              {{ current_user.name }}
+            </span>
+            {% if current_user.is_guest %}
+            <span class="badge bg-secondary-subtle text-muted" style="font-size: 0.68rem;">Guest</span>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-link text-danger p-0 ms-1" title="Sign Out" aria-label="Sign Out">
+              <i class="bi bi-box-arrow-right"></i>
+            </a>
+          </div>
+          {% else %}
+          <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1">
+            <i class="bi bi-person"></i>
+            <span>Sign In</span>
+          </a>
+          {% endif %}
+
           <!-- New Screening CTA Button -->
           <a href="{{ url_for('screening') }}" class="btn-primary-custom btn-sm">
             <i class="bi bi-plus-circle"></i>
@@ -125,7 +147,7 @@
   {% if is_demo %}
   <div class="bg-amber-50 border-bottom border-warning-subtle py-1 px-3 text-center" style="background-color: var(--warning-bg); font-size: 0.84rem; color: #92400e;">
     <span class="badge bg-warning text-dark me-2">DEMO MODE</span>
-    <span data-i18n="badge.demo_mode">Demonstration AI Mode Active — Real PyTorch EfficientNet integration available at <code>model/retina_idrid_model.pth</code>.</span>
+    <span data-i18n="badge.demo_mode">Demonstration AI Mode Active — Custom PyTorch CNN model integration available at <code>model/retina_idrid_model.pth</code>.</span>
   </div>
   {% endif %}
 
@@ -255,16 +277,16 @@
             <div class="brand-icon-wrapper" style="width: 26px; height: 26px; font-size: 0.9rem;">
               <i class="bi bi-eye-fill"></i>
             </div>
-            <strong class="text-dark">RETINA-XAI</strong>
+            <strong class="text-dark">RETINA-XAI &bull; DrishtiAI</strong>
             <span class="text-muted small">| Rural Eye Care Triage Initiative</span>
           </div>
           <p class="mb-0 text-muted small" data-i18n="footer.disclaimer">
-            This system is a research/educational prototype and is not intended to provide a medical diagnosis. Results should be reviewed by a qualified healthcare professional.
+            DrishtiAI is an AI-assisted screening prototype and is not a replacement for diagnosis by a qualified healthcare professional.
           </p>
         </div>
         <div class="col-md-6 text-center text-md-end">
           <div class="small text-muted mb-1">
-            <span>Powered by PyTorch EfficientNetB0 & Grad-CAM</span> &bull; <span>Flask & SQLite</span>
+            <span>Powered by PyTorch Custom CNN &amp; Grad-CAM</span> &bull; <span>Flask &amp; SQLite</span>
           </div>
           <div class="small text-secondary">
             &copy; 2026 RETINA-XAI Prototype. Designed for underserved clinical settings.
