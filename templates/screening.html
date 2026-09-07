@@ -65,6 +65,29 @@
           <input type="file" id="retinaFileInput" name="image" accept=".jpg,.jpeg,.png" class="d-none">
           <input type="hidden" id="sampleInput" name="sample_name" value="">
 
+          <!-- Image Quality Guidance Alert (Shown on validation reject) -->
+          <div id="qualityGuidanceCard" class="image-quality-alert mb-4 d-none">
+            <div class="d-flex align-items-start gap-3">
+              <i class="bi bi-exclamation-triangle-fill text-danger fs-3 flex-shrink-0"></i>
+              <div class="flex-grow-1">
+                <h6 id="qualityErrorTitle" class="fw-bold text-danger mb-1">Image Quality Check Failed</h6>
+                <p id="qualityErrorReason" class="text-dark small mb-2"></p>
+                <div class="p-3 rounded" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                  <div class="fw-bold small text-primary mb-1">
+                    <i class="bi bi-lightbulb-fill text-warning me-1"></i> <span data-i18n="val.guidance_title">How to improve image quality:</span>
+                  </div>
+                  <div id="qualityErrorGuidance" class="small text-muted mb-2 fw-semibold"></div>
+                  <ul class="list-unstyled mb-0 small text-secondary">
+                    <li class="mb-1"><i class="bi bi-check2-circle text-success me-1"></i> Use a standard non-mydriatic or dilated retinal fundus camera.</li>
+                    <li class="mb-1"><i class="bi bi-check2-circle text-success me-1"></i> Center the patient's pupil so the entire circular retina is captured.</li>
+                    <li><i class="bi bi-check2-circle text-success me-1"></i> Keep the camera steady and eliminate bright room reflections.</li>
+                  </ul>
+                </div>
+              </div>
+              <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('qualityGuidanceCard').classList.add('d-none')"></button>
+            </div>
+          </div>
+
           <!-- Drag and Drop Zone -->
           <div id="uploadDropzone" class="upload-dropzone mb-4" tabindex="0" role="button" aria-label="Upload retinal fundus photograph">
             <div class="upload-icon-circle">

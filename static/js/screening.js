@@ -223,11 +223,24 @@ document.addEventListener('DOMContentLoaded', () => {
           processingOverlay.style.display = 'none';
           const errMsg = result.error || 'AI analysis is temporarily unavailable. Please try again.';
           showToast(errMsg, 'danger');
+
+          // If image quality check failed, display structured guidance
+          const qualityCard = document.getElementById('qualityGuidanceCard');
+          const reasonEl = document.getElementById('qualityErrorReason');
+          const guideEl = document.getElementById('qualityErrorGuidance');
+
+          if (result.is_invalid_image && qualityCard && reasonEl && guideEl) {
+            reasonEl.textContent = result.reason || 'Image does not meet quality requirements for diagnostic evaluation.';
+            guideEl.textContent = result.guidance || 'Please upload an authentic, clear retinal fundus photograph.';
+            qualityCard.classList.remove('d-none');
+            qualityCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+
           if (result.is_invalid_image && window.retinaVoice && window.retinaVoice.speakText) {
             const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'en';
             const alertText = lang === 'hi'
-              ? 'अमान्य छवि। कृपया केवल एक मानक रेटिना फोटो अपलोड करें।'
-              : 'Invalid image. Please upload a standard retinal fundus photograph.';
+              ? 'अमान्य छवि। ' + (result.reason || '')
+              : 'Invalid image. ' + (result.reason || 'Please upload a standard retinal fundus photograph.');
             window.retinaVoice.speakText(alertText, lang);
           }
         }

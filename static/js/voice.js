@@ -165,8 +165,15 @@
     try {
       recognitionInstance = new SpeechRecognition();
       recognitionInstance.continuous = false; // Never listen infinitely in background
-      recognitionInstance.interimResults = true;
-      recognitionInstance.lang = lang === 'hi' ? 'hi-IN' : (lang === 'en' ? 'en-US' : lang);
+      const bcp47Map = {
+        'en': 'en-IN',
+        'hi': 'hi-IN',
+        'hinglish': 'hi-IN',
+        'bn': 'bn-IN',
+        'mr': 'mr-IN',
+        'ta': 'ta-IN'
+      };
+      recognitionInstance.lang = bcp47Map[lang] || (lang.includes('-') ? lang : 'en-US');
 
       setVoiceModalState('listening');
 
@@ -302,15 +309,25 @@
 
     if (!text || text.trim() === '') return;
 
+    const bcp47Map = {
+      'en': 'en-IN',
+      'hi': 'hi-IN',
+      'hinglish': 'hi-IN',
+      'bn': 'bn-IN',
+      'mr': 'mr-IN',
+      'ta': 'ta-IN'
+    };
+    const bcpLang = bcp47Map[lang] || (lang === 'hi' ? 'hi-IN' : 'en-US');
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+    utterance.lang = bcpLang;
     utterance.rate = 0.95; // Clear natural rate for healthcare comprehension
     utterance.pitch = 1.0;
 
     // Try to find a matching voice if available
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0) {
-      const match = voices.find(v => v.lang.startsWith(lang === 'hi' ? 'hi' : 'en'));
+      const prefix = bcpLang.split('-')[0];
+      const match = voices.find(v => v.lang.startsWith(prefix) || v.lang.startsWith(lang));
       if (match) utterance.voice = match;
     }
 
@@ -340,6 +357,22 @@
       textToSpeak = `रेटिना-एक्सएआई स्क्रीनिंग रिपोर्ट। रोगी पहचान: ${data.patientId}। ` +
         `एआई मूल्यांकन: श्रेणी ${data.classId}, ${data.prediction}। विश्वास स्तर: ${Math.round(data.confidence)} प्रतिशत। ` +
         `नैदानिक अनुशंसा: ${data.riskStatus}। ${data.referralRequired ? 'विशेषज्ञ नेत्र रोग अस्पताल रेफरल आवश्यक है।' : 'प्राथमिक दृष्टि केंद्र पर नियमित अनुवर्ती जांच।'}`;
+    } else if (lang === 'hinglish') {
+      textToSpeak = `DrishtiAI screening report. Patient ID: ${data.patientId}. ` +
+        `AI result hai Grade ${data.classId}, ${data.prediction}. Confidence level: ${Math.round(data.confidence)} percent. ` +
+        `Triage recommendation: ${data.riskStatus}. ${data.referralRequired ? 'Specialist eye doctor referral zaroori hai.' : 'Routine annual monitoring.'}`;
+    } else if (lang === 'bn') {
+      textToSpeak = `রেটিনা স্ক্রিনিং রিপোর্ট। রোগীর আইডি: ${data.patientId}। ` +
+        `এআই মূল্যায়ন: গ্রেড ${data.classId}, ${data.prediction}। কনফিডেন্স: ${Math.round(data.confidence)} শতাংশ। ` +
+        `পরামর্শ: ${data.referralRequired ? 'চক্ষু বিশেষজ্ঞের কাছে রেফারেল প্রয়োজন।' : 'স্থানীয় কেন্দ্রে নিয়মিত বার্ষিক পর্যবেক্ষণ।'}`;
+    } else if (lang === 'mr') {
+      textToSpeak = `रेटिना स्क्रीनिंग निकाल. रुग्ण आयडी: ${data.patientId}. ` +
+        `AI मूल्यांकन: वर्ग ${data.classId}, ${data.prediction}. अचूकता: ${Math.round(data.confidence)} टक्के. ` +
+        `शिफारस: ${data.referralRequired ? 'नेत्ररोग तज्ज्ञांकडे जाणे आवश्यक आहे.' : 'नियमित वार्षिक तपासणी.'}`;
+    } else if (lang === 'ta') {
+      textToSpeak = `விழித்திரை பரிசோதனை அறிக்கை. நோயாளி ஐடி: ${data.patientId}. ` +
+        `AI மதிப்பீடு: நிலை ${data.classId}, ${data.prediction}. நம்பிக்கை அளவு: ${Math.round(data.confidence)} சதவீதம். ` +
+        `பரிந்துரை: ${data.referralRequired ? 'கண் மருத்துவரிடம் ஆலோசனை தேவை.' : 'வழக்கமான பரிசோதனை போதுமானது.'}`;
     } else {
       textToSpeak = `RETINA-XAI Screening Report for Patient ID ${data.patientId}. ` +
         `AI classification is Severity Grade ${data.classId}, ${data.prediction}, with ${Math.round(data.confidence)} percent confidence. ` +

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Two-Factor Security Verification — DrishtiAI{% endblock %}
+{% block title %}Enter 6-Digit OTP — DrishtiAI{% endblock %}
 
 {% block content %}
 <div class="auth-page-wrapper">
@@ -8,41 +8,51 @@
     <div class="card auth-card shadow-lg border-0">
       <div class="card-body p-4 p-md-5">
 
-        <!-- Logo & Branding Header -->
+        <!-- Logo & Header -->
         <div class="text-center mb-4">
           <div class="auth-brand-badge mx-auto mb-3">
             <div class="brand-icon-wrapper auth-logo-icon">
-              <i class="bi bi-shield-check"></i>
+              <i class="bi bi-shield-lock-fill"></i>
             </div>
           </div>
           <h2 class="auth-title fw-bold mb-1">
-            Security Verification
+            Drishti<span class="text-primary-accent">AI</span>
           </h2>
-          <p class="auth-subtitle mb-0">
-            Two-Factor Clinical Security Verification
+          <p class="auth-subtitle mb-0 text-muted" data-i18n="auth.otp_title">
+            Enter the 6-digit OTP sent to your mobile number
           </p>
         </div>
 
-        <div class="text-center mb-4 text-muted small">
-          Enter the 6-digit verification code sent to:
-          <div class="fw-semibold text-dark mt-1">{{ email }}</div>
+        <div class="text-center mb-4 p-2 bg-light rounded-3 border">
+          <div class="small text-muted" data-i18n="auth.sent_to">Code sent to:</div>
+          <div class="fw-bold fs-6 text-primary font-monospace mt-1">
+            <i class="bi bi-phone me-1"></i>{{ phone }}
+          </div>
+          <a href="{{ url_for('login', next=next_url) }}" class="small text-decoration-none text-secondary" style="font-size: 0.78rem;" data-i18n="auth.change_number">
+            (Change Number)
+          </a>
         </div>
 
-        <!-- Demo OTP Helper Box (Prominent for Judges/Reviewers) -->
+        {% if demo_otp_enabled and demo_otp %}
+        <!-- Demo / Development Simulated OTP Banner -->
         <div class="alert alert-info border-info-subtle d-flex align-items-center justify-content-between p-3 rounded-3 mb-4" role="alert">
           <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-key-fill text-info fs-4 flex-shrink-0"></i>
+            <i class="bi bi-shield-check text-info fs-4 flex-shrink-0"></i>
             <div>
-              <div class="fw-bold text-dark small" style="font-size: 0.82rem;">Prototype Evaluation Access</div>
-              <div class="small text-muted" style="font-size: 0.78rem;">Demo OTP: <strong class="text-primary font-monospace fs-6">652070</strong></div>
+              <div class="fw-bold text-dark small" data-i18n="auth.demo_access">Simulated OTP (Development Mode)</div>
+              <div class="small text-muted">
+                <span data-i18n="auth.demo_code_label">SMS gateway not configured. Verification code:</span> 
+                <strong class="text-primary font-monospace fs-6" id="demoOtpDisplay">{{ demo_otp }}</strong>
+              </div>
             </div>
           </div>
-          <button type="button" id="fillDemoOtpBtn" class="btn btn-sm btn-primary-custom py-1 px-2" style="font-size: 0.78rem;">
+          <button type="button" id="fillDemoOtpBtn" class="btn btn-sm btn-primary-custom py-1 px-3" style="font-size: 0.8rem;">
             Auto-Fill
           </button>
         </div>
+        {% endif %}
 
-        <!-- Alert error messages -->
+        <!-- Alert Error Messages -->
         {% if error %}
         <div class="alert alert-danger d-flex align-items-center gap-2 py-2 px-3 small rounded-3 mb-4" role="alert">
           <i class="bi bi-exclamation-octagon-fill text-danger fs-5 flex-shrink-0"></i>
@@ -55,7 +65,7 @@
           <input type="hidden" name="next" value="{{ next_url }}">
           <input type="hidden" id="fullOtpInput" name="otp" value="">
 
-          <!-- 6-Digit Individual Input Grid -->
+          <!-- 6-Digit Input Grid -->
           <div class="otp-inputs-grid mb-4">
             <input type="text" inputmode="numeric" maxlength="1" class="otp-digit" id="otp-1" data-index="1" autofocus autocomplete="one-time-code">
             <input type="text" inputmode="numeric" maxlength="1" class="otp-digit" id="otp-2" data-index="2">
@@ -66,37 +76,44 @@
           </div>
 
           <div class="d-grid gap-2 mb-3">
-            <button type="submit" id="verifyOtpBtn" class="btn btn-primary-custom btn-lg py-2 fs-6 shadow-sm">
-              <span>Verify &amp; Access Portal</span>
-              <i class="bi bi-arrow-right ms-1"></i>
+            <button type="submit" id="verifyOtpBtn" class="btn btn-primary-custom btn-lg py-3 fs-6 shadow-sm fw-bold">
+              <span id="verifyBtnText" data-i18n="auth.verify_continue">Verify &amp; Continue</span>
+              <i class="bi bi-arrow-right ms-2" id="verifyBtnIcon"></i>
+              <span id="verifyBtnSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
             </button>
           </div>
         </form>
 
-        <!-- Guest Access Bypass Button -->
+        <!-- Resend OTP with Countdown Timer -->
+        <div class="text-center my-3">
+          <div class="d-flex align-items-center justify-content-center gap-2 small">
+            <span class="text-muted" data-i18n="auth.didnt_receive">Didn't receive code?</span>
+            <button type="button" id="resendOtpBtn" class="btn btn-link btn-sm p-0 fw-semibold text-decoration-none" disabled>
+              <span data-i18n="auth.resend_otp">Resend OTP</span>
+            </button>
+            <span id="resendCountdown" class="badge bg-secondary-subtle text-secondary font-monospace">
+              in <span id="timerSeconds">60</span>s
+            </span>
+          </div>
+        </div>
+
+        <!-- Guest Access Option -->
         <div class="text-center my-3">
           <div class="auth-divider mb-3">
-            <span>OR EVALUATE DEMO</span>
+            <span data-i18n="auth.or_eval">OR EVALUATE DEMO</span>
           </div>
           <a href="{{ url_for('guest', next=next_url) }}" class="btn btn-outline-custom w-100 py-2 fs-6 d-flex align-items-center justify-content-center gap-2">
             <i class="bi bi-box-arrow-in-right text-teal"></i>
-            <strong>Explore Portal as Guest</strong>
+            <strong data-i18n="auth.guest_cta">Explore Portal as Guest</strong>
             <span class="badge bg-teal-subtle text-teal ms-1" style="font-size: 0.7rem;">Immediate</span>
           </a>
         </div>
 
-        <div class="text-center mt-3 small text-muted">
-          Need to change email? 
-          <a href="{{ url_for('login', next=next_url) }}" class="fw-semibold text-primary text-decoration-none">
-            Return to Sign In
-          </a>
-        </div>
-
-        <!-- Privacy Notice -->
+        <!-- Privacy & Security Notice -->
         <div class="auth-privacy-notice mt-4 pt-3 border-top text-center">
-          <i class="bi bi-shield-lock-fill text-muted me-1"></i>
-          <span class="text-muted small" style="font-size: 0.76rem;">
-            <strong>Prototype Environment:</strong> Demonstration data only. Do not submit protected health information.
+          <i class="bi bi-shield-check text-muted me-1"></i>
+          <span class="text-muted small" style="font-size: 0.76rem;" data-i18n="auth.otp_security_note">
+            Verification codes are valid for 5 minutes and encrypted in temporary memory.
           </span>
         </div>
 
@@ -113,7 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const fullInput = document.getElementById('fullOtpInput');
   const otpForm = document.getElementById('otpForm');
   const fillDemoBtn = document.getElementById('fillDemoOtpBtn');
-  const demoCode = "{{ demo_otp }}";
+  const demoCode = "{{ demo_otp or '652070' }}";
+  const resendBtn = document.getElementById('resendOtpBtn');
+  const resendCountdown = document.getElementById('resendCountdown');
+  const timerSeconds = document.getElementById('timerSeconds');
+  const verifyBtn = document.getElementById('verifyOtpBtn');
+  const verifyBtnText = document.getElementById('verifyBtnText');
+  const verifyBtnIcon = document.getElementById('verifyBtnIcon');
+  const verifyBtnSpinner = document.getElementById('verifyBtnSpinner');
 
   function syncFullOtp() {
     const code = digits.map(d => d.value).join('');
@@ -130,31 +154,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (digits[5]) digits[5].focus();
   }
 
-  // Handle auto-fill demo button
+  // Auto-fill button
   if (fillDemoBtn) {
     fillDemoBtn.addEventListener('click', () => {
       fillCode(demoCode);
       if (window.showToast) {
-        window.showToast('Demo OTP 652070 applied!', 'info');
+        window.showToast('Demo OTP applied!', 'info');
       }
     });
   }
 
-  // Handle digit inputs
+  // Handle digit input navigation
   digits.forEach((digit, index) => {
     digit.addEventListener('input', (e) => {
       const val = e.target.value.replace(/\D/g, '');
       digit.value = val ? val[val.length - 1] : '';
-      
       syncFullOtp();
-      
       if (digit.value && index < digits.length - 1) {
         digits[index + 1].focus();
       }
-      
-      // If all 6 digits entered, can auto-submit or focus verify
       if (digits.every(d => d.value.length === 1)) {
-        document.getElementById('verifyOtpBtn').focus();
+        verifyBtn.focus();
       }
     });
 
@@ -176,7 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Handle paste event across boxes
     digit.addEventListener('paste', (e) => {
       e.preventDefault();
       const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim().replace(/\D/g, '');
@@ -186,19 +205,80 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Ensure full OTP is synced before form submission
+  // Form submission with rural-friendly validation
   if (otpForm) {
     otpForm.addEventListener('submit', (e) => {
       const code = syncFullOtp();
       if (code.length < 6) {
         e.preventDefault();
-        if (window.showToast) {
-          window.showToast('Please enter all 6 digits of the verification code.', 'warning');
-        } else {
-          alert('Please enter all 6 digits of the verification code.');
-        }
+        const isHi = window.getCurrentLanguage && window.getCurrentLanguage() === 'hi';
+        const msg = isHi ? "कृपया 6 अंकों का पूरा OTP दर्ज करें।" : "Please enter all 6 digits of the verification code.";
+        if (window.showToast) window.showToast(msg, 'warning');
+        else alert(msg);
         const firstEmpty = digits.find(d => !d.value);
         if (firstEmpty) firstEmpty.focus();
+        return false;
+      }
+      verifyBtn.disabled = true;
+      verifyBtnText.innerText = (window.getCurrentLanguage && window.getCurrentLanguage() === 'hi') ? "सत्यापित किया जा रहा है..." : "Verifying...";
+      verifyBtnIcon.classList.add('d-none');
+      verifyBtnSpinner.classList.remove('d-none');
+    });
+  }
+
+  // Resend Countdown Timer (60s)
+  let timeLeft = 60;
+  let countdownTimer = setInterval(() => {
+    timeLeft -= 1;
+    if (timerSeconds) timerSeconds.innerText = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(countdownTimer);
+      resendBtn.disabled = false;
+      resendCountdown.classList.add('d-none');
+    }
+  }, 1000);
+
+  // Resend OTP button handler
+  if (resendBtn) {
+    resendBtn.addEventListener('click', async () => {
+      resendBtn.disabled = true;
+      const originalText = resendBtn.innerText;
+      resendBtn.innerText = "Sending...";
+      try {
+        const response = await fetch("{{ url_for('resend_otp') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await response.json();
+        if (data.success) {
+          if (window.showToast) window.showToast(data.message || "New OTP sent!", "success");
+          else alert(data.message || "New OTP sent!");
+          if (data.demo_otp && document.getElementById('demoOtpDisplay')) {
+            document.getElementById('demoOtpDisplay').innerText = data.demo_otp;
+          }
+          // Reset countdown
+          timeLeft = 60;
+          if (timerSeconds) timerSeconds.innerText = timeLeft;
+          resendCountdown.classList.remove('d-none');
+          countdownTimer = setInterval(() => {
+            timeLeft -= 1;
+            if (timerSeconds) timerSeconds.innerText = timeLeft;
+            if (timeLeft <= 0) {
+              clearInterval(countdownTimer);
+              resendBtn.disabled = false;
+              resendCountdown.classList.add('d-none');
+            }
+          }, 1000);
+        } else {
+          if (window.showToast) window.showToast(data.error || "Failed to resend OTP", "warning");
+          else alert(data.error || "Failed to resend OTP");
+          resendBtn.disabled = false;
+        }
+      } catch (err) {
+        if (window.showToast) window.showToast("Network error. Please try again.", "danger");
+        resendBtn.disabled = false;
+      } finally {
+        resendBtn.innerText = originalText;
       }
     });
   }

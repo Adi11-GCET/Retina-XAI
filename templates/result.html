@@ -131,6 +131,79 @@
         </div>
       </div>
 
+      <!-- Plain-Language Meaning Card ("What does this mean?") -->
+      <div class="custom-card border-0 shadow-sm mb-4">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="brand-icon-wrapper" style="width: 28px; height: 28px; font-size: 0.85rem;">
+            <i class="bi bi-question-circle-fill"></i>
+          </div>
+          <h6 class="fw-bold text-dark mb-0" data-i18n="action.meaning_heading">What does this result mean?</h6>
+        </div>
+        <p class="text-secondary small mb-0" data-i18n="action.meaning_{{ screening.class_id }}">
+          {% if screening.class_id == 0 %}
+          No signs of diabetic retinopathy were detected in this retinal photo. The blood vessels appear healthy.
+          {% elif screening.class_id == 1 %}
+          Very early signs of diabetic eye changes were detected (such as tiny microaneurysms). Vision is typically unaffected at this stage.
+          {% elif screening.class_id == 2 %}
+          Moderate diabetic damage was detected in retinal blood vessels. Swelling or blockages may be starting.
+          {% elif screening.class_id == 3 %}
+          Significant blood vessel blockage was detected in the retina. High risk of rapid vision loss without timely specialist care.
+          {% else %}
+          Advanced diabetic retinopathy detected with abnormal fragile blood vessels. Immediate emergency specialist intervention required to prevent blindness.
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Action Guidance Card ("What should I do now?") -->
+      <div class="custom-card border-0 shadow-sm mb-4" style="background: var(--card-bg); border-left: 5px solid {% if screening.class_id == 0 %}#10b981{% elif screening.class_id == 1 %}#0284c7{% elif screening.class_id == 2 %}#f59e0b{% else %}#ef4444{% endif %} !important;">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <div class="brand-icon-wrapper" style="width: 28px; height: 28px; font-size: 0.85rem; background: {% if screening.class_id == 0 %}rgba(16,185,129,0.15); color: #10b981;{% elif screening.class_id == 1 %}rgba(2,132,199,0.15); color: #0284c7;{% elif screening.class_id == 2 %}rgba(245,158,11,0.15); color: #f59e0b;{% else %}rgba(239,68,68,0.15); color: #ef4444;{% endif %}">
+              <i class="bi bi-lightbulb-fill"></i>
+            </div>
+            <h6 class="fw-bold text-dark mb-0" data-i18n="action.heading">What should I do now?</h6>
+          </div>
+          <span class="badge {% if screening.class_id == 0 %}bg-success-subtle text-success border border-success-subtle{% elif screening.class_id == 1 %}bg-info-subtle text-info border border-info-subtle{% elif screening.class_id == 2 %}bg-warning-subtle text-warning border border-warning-subtle{% else %}bg-danger-subtle text-danger border border-danger-subtle{% endif %}">
+            {% if screening.class_id == 0 %}Routine Annual{% elif screening.class_id == 1 %}6-12 Months{% elif screening.class_id == 2 %}Within 4-8 Weeks{% elif screening.class_id == 3 %}Within 2 Weeks{% else %}Urgent (24-48 Hours){% endif %}
+          </span>
+        </div>
+        <p class="text-dark small fw-medium mb-3" data-i18n="action.step_{{ screening.class_id }}">
+          {% if screening.class_id == 0 %}
+          Schedule a routine eye check-up within 12 months. Maintain healthy blood sugar, blood pressure, and HbA1c levels.
+          {% elif screening.class_id == 1 %}
+          Consult an optometrist or doctor within 6 to 12 months. Strict control of blood glucose and blood pressure helps prevent progression.
+          {% elif screening.class_id == 2 %}
+          Schedule a dilated eye examination with an ophthalmologist within 4 to 8 weeks. Keep blood sugar, cholesterol, and BP under strict medical guidance.
+          {% elif screening.class_id == 3 %}
+          Visit a district eye specialist or vitreoretinal clinic within 2 weeks. Laser therapy or medication may be necessary to preserve sight.
+          {% else %}
+          Seek urgent evaluation at an eye hospital or vitreoretinal clinic within 24 to 48 hours. Immediate specialist treatment can save vision.
+          {% endif %}
+        </p>
+        <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.76rem;">
+          <i class="bi bi-shield-check text-primary"></i>
+          <span data-i18n="action.disclaimer">Always consult a qualified eye specialist or ophthalmologist for final diagnosis and treatment.</span>
+        </div>
+      </div>
+
+      <!-- Nearby Eye Care & Referral Support Extension Point -->
+      <div class="custom-card border-0 shadow-sm mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <div class="brand-icon-wrapper" style="width: 28px; height: 28px; font-size: 0.85rem;">
+              <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <h6 class="fw-bold text-dark mb-0" data-i18n="referral.title">Nearby Eye Care & Referral Support</h6>
+          </div>
+        </div>
+        <p class="text-muted small mb-3" data-i18n="referral.subtitle">
+          Find public community health centres, district eye hospitals, and government tele-ophthalmology facilities.
+        </p>
+        <button type="button" class="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2 py-2" data-bs-toggle="modal" data-bs-target="#referralDirectoryModal">
+          <i class="bi bi-hospital"></i> <span data-i18n="referral.btn_find">View Eye Care Referral Directory</span>
+        </button>
+      </div>
+
     </div>
 
     <!-- Right Column: Grad-CAM Explainable AI & Human Review -->
@@ -336,6 +409,74 @@
         </form>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- Eye Care Referral Directory Modal -->
+<div class="modal fade" id="referralDirectoryModal" tabindex="-1" aria-labelledby="referralDirectoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="background-color: var(--card-bg); border-radius: 16px;">
+      <div class="modal-header border-bottom">
+        <div class="d-flex align-items-center gap-2">
+          <div class="brand-icon-wrapper" style="width: 32px; height: 32px; font-size: 0.95rem;">
+            <i class="bi bi-hospital text-primary"></i>
+          </div>
+          <div>
+            <h5 class="modal-title fw-bold text-dark mb-0" id="referralDirectoryModalLabel" data-i18n="referral.modal_title">Eye Care Referral & Facility Directory</h5>
+            <small class="text-muted" data-i18n="referral.modal_desc">Structured guide for primary health workers and patients to connect with authorized public and accredited eye facilities.</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="p-3 border rounded h-100" style="background-color: var(--bg-main);">
+              <div class="fw-bold text-primary mb-1 d-flex align-items-center gap-1">
+                <i class="bi bi-1-circle-fill"></i> <span data-i18n="referral.level1_title">Primary Vision Centre (PHC/CHC)</span>
+              </div>
+              <p class="text-muted small mb-0" data-i18n="referral.level1_desc">Visit your local Community Health Centre or Ayushman Arogya Mandir for baseline visual acuity assessment, refraction, and tele-ophthalmology linking.</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 border rounded h-100" style="background-color: var(--bg-main);">
+              <div class="fw-bold text-warning mb-1 d-flex align-items-center gap-1">
+                <i class="bi bi-2-circle-fill"></i> <span data-i18n="referral.level2_title">Sub-Divisional / District Hospital</span>
+              </div>
+              <p class="text-muted small mb-0" data-i18n="referral.level2_desc">District hospital ophthalmology department equipped with slit lamps, indirect ophthalmoscopy, and retinal laser photocoagulation facilities under NPCBVI.</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 border rounded h-100" style="background-color: var(--bg-main);">
+              <div class="fw-bold text-danger mb-1 d-flex align-items-center gap-1">
+                <i class="bi bi-3-circle-fill"></i> <span data-i18n="referral.level3_title">Apex Vitreoretinal Tertiary Centre</span>
+              </div>
+              <p class="text-muted small mb-0" data-i18n="referral.level3_desc">Regional Institute of Ophthalmology (RIO) or Government Medical College for specialized anti-VEGF injections and pars plana vitrectomy surgeries.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 border rounded mb-3" style="background-color: var(--bg-main);">
+          <h6 class="fw-bold text-dark mb-2" data-i18n="referral.checklist_title">Patient Preparation Checklist Before Visiting Specialist:</h6>
+          <ul class="text-muted small mb-0 ps-3">
+            <li class="mb-1" data-i18n="referral.item1">Bring this printed AI screening report and any recent blood glucose / HbA1c lab records.</li>
+            <li class="mb-1" data-i18n="referral.item2">Have an escort or family member accompany you, as pupil-dilating eye drops temporarily cause blurry vision for 3-4 hours.</li>
+            <li data-i18n="referral.item3">Bring UV sunglasses or a hat to wear after dilated pupil examination.</li>
+          </ul>
+        </div>
+
+        <div class="alert alert-secondary border-0 mb-0 py-2 px-3 small d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle text-primary flex-shrink-0"></i>
+          <div>
+            <strong>National Program for Control of Blindness & Visual Impairment (NPCBVI):</strong>
+            <span>Dial <strong>104 / 1075</strong> or visit your nearest Government District Hospital for subsidized/free retinal consultations.</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal" data-i18n="referral.btn_close">Close Directory</button>
+      </div>
     </div>
   </div>
 </div>

@@ -27,20 +27,24 @@ class ValidationResult(dict):
     """
     Result object that supports both dict indexing (result['is_valid_retina'])
     and tuple unpacking (is_valid, score, reason = validate_retinal_image(...)).
+    Includes structured diagnostic reason and actionable guidance for rural users.
     """
-    def __init__(self, is_valid, score, reason, metrics=None):
+    def __init__(self, is_valid, score, reason, metrics=None, guidance=None):
         metrics = metrics or {}
+        guidance = guidance or "Please upload an authentic non-mydriatic or dilated fundus camera photograph."
         super().__init__(
             is_valid_retina=is_valid,
             is_valid=is_valid,
             score=score,
             reason=reason,
+            guidance=guidance,
             metrics=metrics
         )
         self.is_valid_retina = is_valid
         self.is_valid = is_valid
         self.score = score
         self.reason = reason
+        self.guidance = guidance
         self.metrics = metrics
 
     def __iter__(self):
@@ -73,11 +77,17 @@ def validate_retinal_image(image_input):
         return ValidationResult(False, 0.0, "Invalid image data format.")
 
     if img_bgr is None or img_bgr.size == 0:
-        return ValidationResult(False, 0.0, "Image could not be read or is corrupted.")
+        return ValidationResult(
+            False, 0.0, "Image could not be read or is corrupted.",
+            guidance="Ensure the image file is not corrupted and is saved in a standard format (JPG or PNG)."
+        )
 
     h, w = img_bgr.shape[:2]
     if h < 64 or w < 64:
-        return ValidationResult(False, 0.0, "Image resolution is too low for ophthalmic screening (minimum 64x64).")
+        return ValidationResult(
+            False, 0.0, "Image resolution is too low for ophthalmic screening (minimum 64x64).",
+            guidance="Upload an uncropped, high-resolution retinal photograph directly from the fundus camera."
+        )
 
     # Standardize working resolution
     sample_size = (256, 256)
@@ -85,15 +95,51 @@ def validate_retinal_image(image_input):
     del img_bgr  # Free high-resolution image array immediately
     gray = cv2.cvtColor(small_bgr, cv2.COLOR_BGR2GRAY)
 
-    # 1. Active Field of View (FOV) Mask
-    # Fundus cameras capture the retina through a dark mask aperture
+    # 1. Extreme Exposure Checks (Darkness / Glare)
+    mean_lum = float(np.mean(gray))
+    if mean_lum < 18.0:
+        return ValidationResult(
+            False, 0.05, "Image is predominantly dark or underexposed.",
+            {"mean_lum": mean_lum},
+            guidance="Increase camera light exposure, flash, or check pupil dilation before taking the photo."
+        )
+
+    if mean_lum > 220.0 or (float(np.sum(gray > 245)) / float(sample_size[0] * sample_size[1])) > 0.35:
+        return ValidationResult(
+            False, 0.10, "Image has severe glare or overexposure.",
+            {"mean_lum": mean_lum},
+            guidance="Avoid direct external reflections, reduce flash intensity, and ensure room lighting is dim."
+        )
+
+    # 2. Blur Detection using Laplacian Variance
+    laplacian_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+    if laplacian_var < 15.0:
+        return ValidationResult(
+            False, 0.15, "Image is blurry or out of focus.",
+            {"laplacian_var": laplacian_var},
+            guidance="Hold the camera steady, ask the patient to keep still, and refocus the lens before capturing."
+        )
+
+    # 3. Active Field of View (FOV) Mask
+    # Fundus cameras capture the retina through a dark circular mask aperture
     active_mask = gray > 15
     active_pixel_count = int(np.sum(active_mask))
     total_pixels = sample_size[0] * sample_size[1]
     active_fraction = float(active_pixel_count) / float(total_pixels)
 
     if active_fraction < 0.15:
-        return ValidationResult(False, 0.05, "Image is predominantly dark or blank.")
+        return ValidationResult(
+            False, 0.05, "Image is predominantly dark or blank.",
+            {"active_fraction": active_fraction},
+            guidance="Increase illumination or non-mydriatic flash before taking the photograph."
+        )
+
+    if active_fraction < 0.22:
+        return ValidationResult(
+            False, 0.12, "Retina is not clearly visible within camera field of view.",
+            {"active_fraction": active_fraction},
+            guidance="Align the camera directly with the patient's pupil so the entire circular retina is captured."
+        )
 
     active_pixels_bgr = small_bgr[active_mask]
     b = active_pixels_bgr[:, 0].astype(np.float32)
@@ -104,24 +150,29 @@ def validate_retinal_image(image_input):
     mean_g = float(np.mean(g))
     mean_r = float(np.mean(r))
 
-    # 2. Chromatic Absorption Spectrum (Vascular / Retinal Hemoglobin Profile)
+    # 3. Chromatic Absorption Spectrum (Vascular / Retinal Hemoglobin Profile)
     # The retinal fundus is illuminated through the pupil; red is strongly reflected
     # by retinal pigment epithelium and choroid, while blue is heavily absorbed.
     # In a natural retina, Blue / Red is rarely above 0.65.
     blue_to_red_ratio = mean_b / (mean_r + 1e-5)
 
     if mean_r < 35.0:
-        return ValidationResult(False, 0.15, "Insufficient red channel illumination for fundus evaluation.")
+        return ValidationResult(
+            False, 0.15, "Image is too dark with insufficient red channel illumination.",
+            {"mean_r": mean_r},
+            guidance="Increase camera light exposure or check patient pupil dilation."
+        )
 
     # In documents, skies, outdoor nature, landscapes: Blue is prominent (B/R >= 0.70)
     if blue_to_red_ratio > 0.70:
         return ValidationResult(
             False, 0.20,
-            f"Chromatic profile inconsistent with retina (Blue/Red ratio: {blue_to_red_ratio:.2f}, expected < 0.70).",
-            {"blue_to_red": blue_to_red_ratio, "mean_r": mean_r}
+            f"Image does not appear to be a retinal fundus photograph (Blue/Red ratio: {blue_to_red_ratio:.2f}, expected < 0.70).",
+            {"blue_to_red": blue_to_red_ratio, "mean_r": mean_r},
+            guidance="Please upload an authentic retinal fundus photograph (not an external eye, face, or document)."
         )
 
-    # 3. Warm Retinal Hue Concentration in HSV Color Space
+    # 4. Warm Retinal Hue Concentration in HSV Color Space
     # Retinal hues cluster heavily between 0-28 and 155-180 in OpenCV Hue (0-180)
     small_hsv = cv2.cvtColor(small_bgr, cv2.COLOR_BGR2HSV)
     h_channel = small_hsv[:, :, 0][active_mask]
@@ -132,20 +183,29 @@ def validate_retinal_image(image_input):
         return ValidationResult(
             False, 0.25,
             f"Hue distribution inconsistent with retinal fundus (Warm hue ratio: {warm_hue_ratio:.2f}, expected >= 0.60).",
-            {"warm_hue_ratio": warm_hue_ratio}
+            {"warm_hue_ratio": warm_hue_ratio},
+            guidance="Ensure the camera is photographing the internal retina, which has a warm orange-red vascular hue."
         )
 
-    # 4. Green Channel Structural & Vascular Contrast
+    # 5. Green Channel Structural & Vascular Contrast
     # The green channel exhibits microvascular patterns. Flat solid colors or uniform documents
     # have very low green standard deviation across active areas.
     std_g = float(np.std(g))
     if std_g < 6.0:
-        return ValidationResult(False, 0.25, "Image lacks retinal vascular contrast (uniform or artificial graphic).")
+        return ValidationResult(
+            False, 0.25, "Image lacks retinal vascular contrast (uniform or artificial graphic).",
+            {"green_std": std_g},
+            guidance="Ensure retinal vessels are clearly in focus and the photo is not an artificial or flat graphic."
+        )
 
-    # 5. Document / Bright Screen Rejection
+    # 6. Document / Bright Screen / Glare Rejection
     # Scanned documents, white paper, and screenshots have high luminance across all 3 channels
     if mean_r > 220.0 and mean_g > 220.0 and mean_b > 210.0:
-        return ValidationResult(False, 0.10, "Image appears to be a white document, screenshot, or overexposed paper.")
+        return ValidationResult(
+            False, 0.10, "Image is overexposed or washed out (document, white screen, or severe glare).",
+            {"mean_r": mean_r, "mean_g": mean_g, "mean_b": mean_b},
+            guidance="Reduce flash intensity and eliminate external reflections or glare before taking the photo."
+        )
 
     # Compute a confidence score of retinal likelihood (0.0 to 1.0)
     score = min(1.0, (
@@ -160,6 +220,8 @@ def validate_retinal_image(image_input):
             "blue_to_red": round(blue_to_red_ratio, 3),
             "warm_hue_ratio": round(warm_hue_ratio, 3),
             "green_std": round(std_g, 2),
-            "active_fraction": round(active_fraction, 3)
-        }
+            "active_fraction": round(active_fraction, 3),
+            "laplacian_var": round(laplacian_var, 1)
+        },
+        guidance="Retinal image successfully validated for diagnostic feature analysis."
     )

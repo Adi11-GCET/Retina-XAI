@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Sign In — DrishtiAI Retinal Screening Portal{% endblock %}
+{% block title %}Welcome to DrishtiAI — Sign In{% endblock %}
 
 {% block content %}
 <div class="auth-page-wrapper">
@@ -18,12 +18,12 @@
           <h2 class="auth-title fw-bold mb-1">
             Drishti<span class="text-primary-accent">AI</span>
           </h2>
-          <p class="auth-subtitle mb-0">
-            Secure Retinal Screening &amp; Tele-Health Portal
+          <p class="auth-subtitle mb-0 text-muted" data-i18n="auth.welcome">
+            Welcome to DrishtiAI &bull; Secure Retinal Screening &amp; Tele-Health Portal
           </p>
         </div>
 
-        <!-- Alert messages -->
+        <!-- Alert Error Messages -->
         {% if error %}
         <div class="alert alert-danger d-flex align-items-center gap-2 py-2 px-3 small rounded-3 mb-4" role="alert">
           <i class="bi bi-exclamation-octagon-fill text-danger fs-5 flex-shrink-0"></i>
@@ -31,64 +31,75 @@
         </div>
         {% endif %}
 
-        <!-- Login Form -->
-        <form action="{{ url_for('login') }}" method="POST" class="needs-validation" novalidate>
+        <!-- Mobile Number OTP Request Form -->
+        <form id="loginForm" action="{{ url_for('login') }}" method="POST" class="needs-validation" novalidate>
           <input type="hidden" name="next" value="{{ next_url }}">
 
           <div class="mb-4">
-            <label for="loginEmail" class="form-label auth-label">
-              <i class="bi bi-envelope-at me-1 text-primary"></i> Registered Email Address
+            <label for="mobileInput" class="form-label auth-label fw-bold text-dark">
+              <i class="bi bi-phone me-1 text-primary"></i>
+              <span data-i18n="auth.mobile_label">Mobile Number</span>
             </label>
-            <div class="input-group auth-input-group">
-              <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <div class="input-group input-group-lg auth-input-group">
+              <span class="input-group-text fw-bold bg-light text-primary px-3">+91</span>
               <input 
-                type="email" 
-                class="form-control form-control-lg auth-input" 
-                id="loginEmail" 
-                name="email" 
-                placeholder="clinician@hospital.org" 
-                value="{{ request.form.email or '' }}"
+                type="tel" 
+                class="form-control form-control-lg auth-input font-monospace" 
+                id="mobileInput" 
+                name="phone" 
+                placeholder="98765 43210" 
+                maxlength="15"
+                inputmode="numeric"
+                autocomplete="tel"
+                value="{{ request.form.phone or '' }}"
                 required 
                 autofocus
               >
             </div>
-            <div class="form-text small text-muted mt-1">
-              Demo account available: <code>demo@drishtiai.org</code>
+            <div class="form-text small text-muted mt-2 d-flex align-items-center justify-content-between">
+              <span data-i18n="auth.otp_hint">We will send a 6-digit verification code via SMS.</span>
             </div>
           </div>
 
+          {% if demo_otp_enabled %}
+          <!-- Demo Quick Fill helper -->
+          <div class="p-2 mb-3 rounded-3 border border-primary-subtle bg-light d-flex align-items-center justify-content-between small">
+            <span class="text-muted">
+              <i class="bi bi-info-circle text-primary me-1"></i>
+              <strong data-i18n="auth.demo_helper">Demo Clinician:</strong> 9876543210
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.76rem;" onclick="document.getElementById('mobileInput').value='9876543210';">
+              Fill Demo
+            </button>
+          </div>
+          {% endif %}
+
           <div class="d-grid gap-2 mb-3">
-            <button type="submit" class="btn btn-primary-custom btn-lg py-2 fs-6 shadow-sm">
-              <span>Continue to Verification</span>
-              <i class="bi bi-arrow-right ms-1"></i>
+            <button type="submit" id="sendOtpBtn" class="btn btn-primary-custom btn-lg py-3 fs-6 shadow-sm fw-bold">
+              <span id="btnText" data-i18n="auth.send_otp">Send OTP</span>
+              <i class="bi bi-arrow-right ms-2" id="btnIcon"></i>
+              <span id="btnSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
             </button>
           </div>
         </form>
 
-        <!-- Guest Access Bypass Button -->
+        <!-- Guest Access Bypass Option -->
         <div class="text-center my-3">
           <div class="auth-divider mb-3">
-            <span>OR EVALUATE DEMO</span>
+            <span data-i18n="auth.or_eval">OR EVALUATE DEMO</span>
           </div>
           <a href="{{ url_for('guest', next=next_url) }}" class="btn btn-outline-custom w-100 py-2 fs-6 d-flex align-items-center justify-content-center gap-2">
             <i class="bi bi-box-arrow-in-right text-teal"></i>
-            <strong>Explore Portal as Guest</strong>
+            <strong data-i18n="auth.guest_cta">Explore Portal as Guest</strong>
             <span class="badge bg-teal-subtle text-teal ms-1" style="font-size: 0.7rem;">1-Click Entry</span>
           </a>
         </div>
 
-        <div class="text-center mt-3 small text-muted">
-          New healthcare screener? 
-          <a href="{{ url_for('register', next=next_url) }}" class="fw-semibold text-primary text-decoration-none">
-            Register Clinician Profile
-          </a>
-        </div>
-
-        <!-- Privacy & Prototype Disclaimer Notice -->
+        <!-- Rural Friendly Medical Disclaimer Notice -->
         <div class="auth-privacy-notice mt-4 pt-3 border-top text-center">
-          <i class="bi bi-shield-lock-fill text-muted me-1"></i>
-          <span class="text-muted small" style="font-size: 0.76rem;">
-            <strong>Prototype Environment:</strong> Demonstration data only. Do not submit protected health information or sensitive patient identifiers.
+          <i class="bi bi-shield-check text-success me-1"></i>
+          <span class="text-muted small" style="font-size: 0.78rem;" data-i18n="auth.secure_badge">
+            Secure passwordless mobile verification for community healthcare screeners.
           </span>
         </div>
 
@@ -96,4 +107,34 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('loginForm');
+  const btn = document.getElementById('sendOtpBtn');
+  const btnText = document.getElementById('btnText');
+  const btnIcon = document.getElementById('btnIcon');
+  const btnSpinner = document.getElementById('btnSpinner');
+  const phoneInput = document.getElementById('mobileInput');
+
+  form.addEventListener('submit', (e) => {
+    const val = phoneInput.value.trim().replace(/\D/g, '');
+    if (val.length < 10) {
+      e.preventDefault();
+      const isHi = window.getCurrentLanguage && window.getCurrentLanguage() === 'hi';
+      const msg = isHi ? "कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।" : "Please enter a valid 10-digit mobile number.";
+      if (window.showToast) window.showToast(msg, 'warning');
+      else alert(msg);
+      phoneInput.focus();
+      return false;
+    }
+    btn.disabled = true;
+    btnText.innerText = (window.getCurrentLanguage && window.getCurrentLanguage() === 'hi') ? "OTP भेजा जा रहा है..." : "Sending OTP...";
+    btnIcon.classList.add('d-none');
+    btnSpinner.classList.remove('d-none');
+  });
+});
+</script>
 {% endblock %}
